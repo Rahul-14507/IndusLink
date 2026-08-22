@@ -23,3 +23,19 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+html.lenis, html.lenis body {
+  height: auto;
+}
+
+.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis-smooth iframe {
+  pointer-events: none;
+}
