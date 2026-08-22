@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: riskradar-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: riskradar
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
