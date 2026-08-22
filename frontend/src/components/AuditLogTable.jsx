@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { ChevronDown, ChevronRight, FileText, Search } from "lucide-react";
 
-export default function AuditLogTable({ auditLogs, onFilterAsset, activeAssetFilter }) {
+export default function AuditLogTable({ auditLogs, onFilterAsset, activeAssetFilter, hideFilter = false }) {
   const [expandedRows, setExpandedRows] = useState([]);
   const [searchAsset, setSearchAsset] = useState(activeAssetFilter || "");
 
@@ -25,6 +25,7 @@ export default function AuditLogTable({ auditLogs, onFilterAsset, activeAssetFil
   return (
     <div className="space-y-4">
       {/* Log Search Filter Bar */}
+      {!hideFilter && (
       <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 bg-surface p-4 border border-border rounded-xl shadow-sm">
         <div className="relative flex-grow max-w-md w-full">
           <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -57,6 +58,7 @@ export default function AuditLogTable({ auditLogs, onFilterAsset, activeAssetFil
           </button>
         )}
       </form>
+      )}
 
       {/* Log Viewer Table */}
       <div className="bg-surface border border-border rounded-xl overflow-hidden shadow-sm">
