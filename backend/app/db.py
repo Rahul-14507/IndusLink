@@ -3,6 +3,10 @@ import datetime
 import logging
 import psycopg2
 from psycopg2.extras import RealDictCursor, Json
+from dotenv import load_dotenv
+
+# Load environment variables from .env
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 
