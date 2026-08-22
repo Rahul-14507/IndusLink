@@ -6,7 +6,7 @@ import {
   useMutation,
   useQueryClient
 } from "@tanstack/react-query";
-import { ShieldAlert, BarChart3, Database, Play, Activity, Upload } from "lucide-react";
+import { ShieldAlert, BarChart3, Database, Play, Activity, Upload, Cpu } from "lucide-react";
 
 // Components
 import RiskQueueTable from "./components/RiskQueueTable";
@@ -17,6 +17,7 @@ import DashboardTrends from "./components/DashboardTrends";
 import LiveFeedIndicator from "./components/LiveFeedIndicator";
 import LandingPage from "./components/LandingPage";
 import ImportModal from "./components/ImportModal";
+import PairingModal from "./components/PairingModal";
 
 // Local/ngrok tunnel warning bypass interceptor
 const originalFetch = window.fetch;
@@ -98,6 +99,7 @@ function RiskRadarApp({ onLeaveApp, currentRoute }) {
   const [auditAssetFilter, setAuditAssetFilter] = useState("");
   const [isPulseActive, setIsPulseActive] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [isPairingOpen, setIsPairingOpen] = useState(false);
   const [latestLiveReading, setLatestLiveReading] = useState(null);
 
   const qc = useQueryClient();
@@ -319,6 +321,14 @@ function RiskRadarApp({ onLeaveApp, currentRoute }) {
           </div>
 
           <button
+            onClick={() => setIsPairingOpen(true)}
+            className="flex-grow lg:flex-grow-0 flex items-center justify-center space-x-1.5 px-4 py-2 bg-white/60 hover:bg-white border border-border text-[#3B4C41] hover:text-[#1D3225] text-[10px] font-bold font-mono uppercase tracking-wider rounded-full transition-all shadow-sm whitespace-nowrap"
+          >
+            <Cpu className="h-3.5 w-3.5" />
+            <span>Pair Sensor Node</span>
+          </button>
+
+          <button
             onClick={() => setIsImportOpen(true)}
             className="flex-grow lg:flex-grow-0 flex items-center justify-center space-x-1.5 px-4 py-2 bg-white/60 hover:bg-white border border-border text-[#3B4C41] hover:text-[#1D3225] text-[10px] font-bold font-mono uppercase tracking-wider rounded-full transition-all shadow-sm whitespace-nowrap"
           >
@@ -346,15 +356,17 @@ function RiskRadarApp({ onLeaveApp, currentRoute }) {
         )}
         {selectedAssetId ? (
           /* Detailed Assessment Card View */
-          <AssetDetailPage
-            assetId={selectedAssetId}
-            assetDetail={assetDetail}
-            history={assetHistory}
-            onBack={() => navigate("/console")}
-          />
+          <div key={`detail-${selectedAssetId}`} className="animate-page-change">
+            <AssetDetailPage
+              assetId={selectedAssetId}
+              assetDetail={assetDetail}
+              history={assetHistory}
+              onBack={() => navigate("/console")}
+            />
+          </div>
         ) : (
           /* Multi-Tab Operational Views */
-          <div>
+          <div key={`tab-${activeTab}`} className="animate-page-change">
             {activeTab === "queue" && (
               <div className="space-y-4">
                 {/* Priority Early Warning Banner */}
@@ -417,7 +429,7 @@ function RiskRadarApp({ onLeaveApp, currentRoute }) {
 
       {/* Footer copyright */}
       <footer className="bg-surface border-t border-border py-4 px-6 text-center text-xs text-ink-muted">
-        RiskRadar Safety Predictive-Safety Platform &copy; 2026. All rights reserved.
+        IndusLink Predictive-Safety Platform &copy; 2026. All rights reserved.
       </footer>
 
       {/* CSV Ingestion Dialog Modal */}
@@ -435,6 +447,19 @@ function RiskRadarApp({ onLeaveApp, currentRoute }) {
           }
         }}
         apiBase={API_BASE}
+      />
+
+      {/* IoT Pairing Modal */}
+      <PairingModal
+        isOpen={isPairingOpen}
+        onClose={() => setIsPairingOpen(false)}
+        apiBase={API_BASE}
+        onPairSuccess={(newAssetId) => {
+          qc.invalidateQueries({ queryKey: ["risk-queue"] });
+          qc.invalidateQueries({ queryKey: ["early-warnings"] });
+          qc.invalidateQueries({ queryKey: ["dashboard-trends"] });
+          qc.invalidateQueries({ queryKey: ["audit-logs"] });
+        }}
       />
     </div>
   );

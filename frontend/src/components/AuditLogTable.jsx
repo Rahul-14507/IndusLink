@@ -26,38 +26,38 @@ export default function AuditLogTable({ auditLogs, onFilterAsset, activeAssetFil
     <div className="space-y-4">
       {/* Log Search Filter Bar */}
       {!hideFilter && (
-      <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 bg-surface p-4 border border-border rounded-xl shadow-sm">
-        <div className="relative flex-grow max-w-md w-full">
-          <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-4 w-4 text-ink-muted" />
-          </span>
-          <input
-            type="text"
-            placeholder="Filter audit log by Asset ID (e.g. BOILER-01)..."
-            value={searchAsset}
-            onChange={(e) => setSearchAsset(e.target.value)}
-            className="w-full text-sm pl-9 pr-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:border-[#1D3225] focus:ring-1 focus:ring-[#1D3225] transition-all text-ink font-sans"
-          />
-        </div>
-        <button
-          type="submit"
-          className="w-full sm:w-auto px-5 py-2 bg-[#1D3225] hover:bg-[#15291D] text-white text-xs font-bold font-mono rounded-full transition-all uppercase tracking-wider whitespace-nowrap shadow-sm"
-        >
-          Apply Filter
-        </button>
-        {activeAssetFilter && (
+        <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 bg-surface p-4 border border-border rounded-xl shadow-sm">
+          <div className="relative flex-grow max-w-md w-full">
+            <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-4 w-4 text-ink-muted" />
+            </span>
+            <input
+              type="text"
+              placeholder="Filter audit log by Asset ID (e.g. BOILER-01)..."
+              value={searchAsset}
+              onChange={(e) => setSearchAsset(e.target.value)}
+              className="w-full text-sm pl-9 pr-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:border-[#1D3225] focus:ring-1 focus:ring-[#1D3225] transition-all text-ink font-sans"
+            />
+          </div>
           <button
-            type="button"
-            onClick={() => {
-              setSearchAsset("");
-              onFilterAsset("");
-            }}
-            className="w-full sm:w-auto px-4 py-2 bg-surface hover:bg-surface-muted text-ink-muted text-xs border border-border rounded-full font-bold font-mono uppercase tracking-wider whitespace-nowrap shadow-sm"
+            type="submit"
+            className="w-full sm:w-auto px-5 py-2 bg-[#1D3225] hover:bg-[#15291D] text-white text-xs font-bold font-mono rounded-full transition-all uppercase tracking-wider whitespace-nowrap shadow-sm"
           >
-            Clear
+            Apply Filter
           </button>
-        )}
-      </form>
+          {activeAssetFilter && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchAsset("");
+                onFilterAsset("");
+              }}
+              className="w-full sm:w-auto px-4 py-2 bg-surface hover:bg-surface-muted text-ink-muted text-xs border border-border rounded-full font-bold font-mono uppercase tracking-wider whitespace-nowrap shadow-sm"
+            >
+              Clear
+            </button>
+          )}
+        </form>
       )}
 
       {/* Log Viewer Table */}

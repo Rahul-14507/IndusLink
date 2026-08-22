@@ -781,6 +781,106 @@ def trigger_batch_scoring():
     finally:
         conn.close()
 
+from pydantic import BaseModel, Field
+
+class AssetCreate(BaseModel):
+    asset_id: str
+    name: str
+    type: str
+    location: str
+    criticality: int = Field(3, ge=1, le=5)
+
+class TelemetryPayload(BaseModel):
+    asset_id: str
+    temperature: float
+    humidity: float
+    pressure: float
+
+@app.post("/api/assets", status_code=201)
+def create_asset(asset: AssetCreate):
+    conn = get_db_connection()
+    try:
+        norm_id = asset.asset_id.strip().upper()
+        if not norm_id:
+            raise HTTPException(status_code=400, detail="Asset ID cannot be empty")
+            
+        with conn.cursor() as cur:
+            # Check if asset already exists
+            cur.execute("SELECT asset_id FROM equipment WHERE UPPER(asset_id) = %s", (norm_id,))
+            if cur.fetchone():
+                raise HTTPException(status_code=400, detail=f"Asset ID '{norm_id}' already exists")
+                
+            cur.execute(
+                """
+                INSERT INTO equipment (asset_id, name, type, location, install_date, criticality)
+                VALUES (%s, %s, %s, %s, CURRENT_DATE, %s)
+                """,
+                (norm_id, asset.name.strip(), asset.type.strip(), asset.location.strip(), asset.criticality)
+            )
+            conn.commit()
+            logger.info(f"New asset registered: {norm_id}")
+            
+            # Immediately run the scoring engine once to initialize its status
+            run_scoring_pipeline(norm_id)
+            return {"status": "success", "asset_id": norm_id}
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to create asset: {e}")
+        if conn:
+            conn.rollback()
+        raise HTTPException(status_code=500, detail=f"Database insert failed: {str(e)}")
+    finally:
+        conn.close()
+
+@app.post("/api/ingest/telemetry", status_code=201)
+def ingest_telemetry(payload: TelemetryPayload):
+    from backend.iot.mqtt_listener import get_limits_for_metric
+    
+    conn = get_db_connection()
+    try:
+        norm_id = payload.asset_id.strip().upper()
+        
+        # Verify asset exists
+        with conn.cursor() as cur:
+            cur.execute("SELECT asset_id FROM equipment WHERE UPPER(asset_id) = %s", (norm_id,))
+            if not cur.fetchone():
+                raise HTTPException(status_code=404, detail=f"Asset '{norm_id}' not found. Pair a sensor node first.")
+        
+        metrics = ["temperature", "humidity", "pressure"]
+        import datetime
+        ts = datetime.datetime.now(datetime.timezone.utc)
+        
+        for metric in metrics:
+            val = float(getattr(payload, metric))
+            safe_min, safe_max = get_limits_for_metric(norm_id, metric, conn)
+            
+            reading_data = {
+                "asset_id": norm_id,
+                "ts": ts,
+                "metric": metric,
+                "value": val,
+                "safe_min": safe_min,
+                "safe_max": safe_max,
+                "source": "live"
+            }
+            save_sensor_reading(reading_data, conn)
+            logger.info(f"Interactive Override Ingested: {norm_id} -> {metric}: {val} (Safe: {safe_min} - {safe_max})")
+            
+        # Trigger central scoring pipeline
+        run_scoring_pipeline(norm_id)
+        
+        return {"status": "success", "asset_id": norm_id}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Interactive telemetry ingestion error: {e}")
+        raise HTTPException(status_code=500, detail=f"Ingestion failed: {e}")
+    finally:
+        conn.close()
+
 # --- WebSocket Route ---
 
 @app.websocket("/ws/live-risk")
