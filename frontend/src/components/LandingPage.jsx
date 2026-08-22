@@ -7,6 +7,7 @@ import FoldText from "./FoldText";
 import GlareHover from "./GlareHover";
 import CardSwap, { Card } from "./CardSwap";
 import PillNav from "./PillNav";
+import terminalGif from "../assets/Gif.gif";
 import {
   ShieldAlert,
   ArrowRight,
@@ -54,64 +55,6 @@ export default function LandingPage({ onEnterApp }) {
     };
   }, []);
 
-  const [logs, setLogs] = useState([
-    { type: "SYSTEM", text: "Initializing telemetry ingestion socket...", color: "text-zinc-400", time: "20:24:01" },
-    { type: "SYSTEM", text: "Connecting to MQTT Broker: broker.hivemq.com", color: "text-zinc-400", time: "20:24:03" },
-    { type: "SYSTEM", text: "Ingestion active. Monitoring 5 dimensions...", color: "text-emerald-500", time: "20:24:05" }
-  ]);
-  const [isPaused, setIsPaused] = useState(false);
-  const [logIndex, setLogIndex] = useState(0);
-  const terminalContainerRef = useRef(null);
-
-  const logTemplates = useMemo(() => [
-    { type: "VIBRATION", text: "PUMP-014: 2.1 mm/s - Vibration within tolerance", color: "text-[#8CA094]" },
-    { type: "PRESSURE", text: "BOILER-01: 72.4 psi - Nominal pressure", color: "text-[#8CA094]" },
-    { type: "TEMPERATURE", text: "TURBINE-08: 142.6°F - Steady state", color: "text-[#8CA094]" },
-    { type: "MAINTENANCE", text: "VALVE-09: Scheduled lubrication complete", color: "text-emerald-400/80" },
-    { type: "SYSTEM", text: "Audit log sync: 0 anomalies detected in past 24h", color: "text-zinc-400" },
-    { type: "VIBRATION", text: "PUMP-014: 4.2 mm/s - Drift detected (Threshold: 4.0)", color: "text-amber-400 font-medium" },
-    { type: "INDUSLINK", text: ">>> [FLAGGED] PUMP-014: Score elevated to 54 (WARN) - Drift detected", color: "text-amber-400 font-semibold" },
-    { type: "PRESSURE", text: "COMPRESSOR-02: 84.1 psi - Nominal pressure", color: "text-[#8CA094]" },
-    { type: "MAINTENANCE", text: "COMPRESSOR-02: Next PM schedule overdue by 124 days", color: "text-amber-405" },
-    { type: "INDUSLINK", text: ">>> [FLAGGED] COMPRESSOR-02: Score elevated to 72 (HIGH) - Overdue maintenance", color: "text-red-400 font-semibold" },
-    { type: "INDUSLINK", text: ">>> [RECOMMENDATION] Dispatch mechanical check for COMPRESSOR-02", color: "text-emerald-400 font-semibold" },
-    { type: "INSPECTION", text: "VALVE-09: Seal integrity marked as 'degraded' in report", color: "text-amber-400" },
-    { type: "SYSTEM", text: "Cleared queue: 14 telemetry packets processed", color: "text-zinc-400" }
-  ], []);
-
-  useEffect(() => {
-    if (isPaused) return;
-    const interval = setInterval(() => {
-      setLogs((prev) => {
-        const nextLog = logTemplates[logIndex % logTemplates.length];
-        const now = new Date();
-        const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
-        return [...prev, { ...nextLog, time: timeStr }].slice(-20);
-      });
-      setLogIndex((prev) => prev + 1);
-    }, 2800);
-
-    return () => clearInterval(interval);
-  }, [isPaused, logIndex, logTemplates]);
-
-  useEffect(() => {
-    if (terminalContainerRef.current) {
-      terminalContainerRef.current.scrollTop = terminalContainerRef.current.scrollHeight;
-    }
-  }, [logs]);
-
-  const handleInjectFailure = () => {
-    const now = new Date();
-    const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
-    const injected = [
-      { type: "INJECT", text: "[USER_INJECT] Triggered cooling loop blockage sequence...", color: "text-purple-400 font-bold", time: timeStr },
-      { type: "TEMPERATURE", text: "BOILER-01: 298.4°F - EXTREME HEAT EXCURSION", color: "text-red-500 font-bold", time: timeStr },
-      { type: "PRESSURE", text: "BOILER-01: 119.5 psi - Limit exceeded", color: "text-red-500 font-bold", time: timeStr },
-      { type: "INDUSLINK", text: ">>> [CRITICAL ALERT] BOILER-01: Score 92 (EMERGENCY) - Thermal runaway threat", color: "text-red-400 font-black tracking-wide", time: timeStr },
-      { type: "INDUSLINK", text: ">>> [RECOMMENDATION] EMERGENCY DISPATCH: Actuate manual steam vent release valve.", color: "text-emerald-400 font-black", time: timeStr }
-    ];
-    setLogs((prev) => [...prev, ...injected].slice(-20));
-  };
 
   // Helper for smooth scrolling
   const scrollToSection = (id) => {
@@ -163,7 +106,7 @@ export default function LandingPage({ onEnterApp }) {
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           
           {/* Left Hero Texts */}
-          <div className="lg:col-span-7 space-y-6">
+          <div className="lg:col-span-6 space-y-6">
             <div className="inline-flex items-center space-x-2 border border-[#E3DFD5] bg-[#EFECE6]/40 px-3 py-1 rounded-full text-[11px] text-[#3B4C41] font-mono tracking-wider">
               <span className="text-emerald-600 font-bold">&bull;</span>
               <span className="uppercase text-[9px]">AI-Powered Industrial Safety</span>
@@ -205,68 +148,9 @@ export default function LandingPage({ onEnterApp }) {
             </div>
           </div>
 
-          {/* Right Hero: Live Telemetry Logger Terminal wrapped in GlareHover */}
-          <div className="lg:col-span-5 shadow-2xl">
-            <GlareHover
-              glareColor="#ffffff"
-              glareOpacity={0.15}
-              glareAngle={-30}
-              glareSize={220}
-              borderRadius="16px"
-              background="#13261C"
-              borderColor="#274433"
-              height="400px"
-              className="p-5 text-zinc-150 relative overflow-hidden flex flex-col h-[400px]"
-            >
-              {/* Card Header */}
-              <div className="border-b border-[#274433] pb-3 mb-3 flex items-center justify-between">
-                <div>
-                  <h3 className="text-xs font-bold font-mono text-white uppercase tracking-wider">Live Ingest Monitor</h3>
-                  <p className="text-[9px] text-zinc-400 font-sans mt-0.5">Correlating multi-dimensional safety data streams</p>
-                </div>
-                <div className="flex items-center space-x-1.5 bg-[#0D1912] border border-[#274433] px-2.5 py-1 rounded-full">
-                  <span className={`h-1.5 w-1.5 rounded-full ${isPaused ? 'bg-amber-500' : 'bg-emerald-500 animate-pulse'}`} />
-                  <span className="text-[9px] font-mono text-zinc-300 font-bold uppercase tracking-wider">
-                    {isPaused ? 'PAUSED' : 'STREAMING'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Terminal Logs Area */}
-              <div ref={terminalContainerRef} className="flex-grow bg-[#0D1912] border border-[#274433] rounded-lg p-3 overflow-y-auto font-mono text-[10px] space-y-1.5 scrollbar-none">
-                {logs.map((log, index) => (
-                  <div key={index} className="leading-relaxed break-words">
-                    <span className="text-zinc-500 mr-1.5">[{log.time}]</span>
-                    <span className="px-1 py-0.5 bg-[#13261C] border border-[#274433] text-zinc-300 rounded text-[8px] mr-1.5 font-bold uppercase select-none tracking-wide">
-                      {log.type}
-                    </span>
-                    <span className={log.color}>{log.text}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Terminal Controls */}
-              <div className="mt-3 grid grid-cols-3 gap-2 text-center text-[9px] font-mono font-bold uppercase">
-                <button
-                  onClick={() => setIsPaused(!isPaused)}
-                  className="py-2.5 border border-[#274433] hover:border-zinc-500 hover:text-white bg-[#1A3226] text-zinc-300 rounded-lg transition-colors"
-                >
-                  {isPaused ? 'RESUME FEED' : 'PAUSE FEED'}
-                </button>
-                <button
-                  onClick={() => setLogs([])}
-                  className="py-2.5 border border-[#274433] hover:border-zinc-500 hover:text-white bg-[#1A3226] text-zinc-300 rounded-lg transition-colors"
-                >
-                  CLEAR
-                </button>
-                <button
-                  onClick={handleInjectFailure}
-                  className="py-2.5 border border-purple-800 hover:border-purple-500 bg-[#25132A] text-purple-200 hover:text-white rounded-lg transition-colors"
-                >
-                  INJECT ERROR
-                </button>
-              </div>
-            </GlareHover>
+          {/* Right Hero: GIF replacement for Terminal */}
+          <div className="lg:col-span-6 flex items-center justify-center scale-105">
+            <img src={terminalGif} alt="Live Ingest Monitor" className="w-full h-auto rounded-xl border border-[#274433] shadow-lg" />
           </div>
 
         </div>
