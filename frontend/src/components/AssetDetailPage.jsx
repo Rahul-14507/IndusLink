@@ -12,6 +12,7 @@ import {
   ReferenceLine
 } from "recharts";
 import ScenarioBadge from "./ScenarioBadge";
+import AuditLogTable from "./AuditLogTable";
 
 export default function AssetDetailPage({ assetId, assetDetail, history, onBack }) {
   if (!assetDetail) return <div className="p-8 text-center text-ink-muted">Loading asset details...</div>;
@@ -491,6 +492,14 @@ export default function AssetDetailPage({ assetId, assetDetail, history, onBack 
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Audit Log Table */}
+          <div className="bg-surface border border-border rounded-xl p-6 shadow-sm mt-6">
+            <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest border-b border-border pb-2 mb-4">
+              Asset Audit Log
+            </h3>
+            <AuditLogTable auditLogs={history} hideFilter={true} />
           </div>
         </div>
       </div>
