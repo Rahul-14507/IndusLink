@@ -1,0 +1,4 @@
+asset_id,name,type,location,install_date,criticality
+BOILER-99,Auxiliary High-Pressure Boiler Z,boiler,North Wing,2025-01-10,5
+PUMP-55,Centrifugal Inflow Water Pump 5B,pump,East Sector,2024-06-15,3
+TURBINE-07,Gas Turbine Generator Generator A,turbine,Generator Room 3,2023-11-20,5

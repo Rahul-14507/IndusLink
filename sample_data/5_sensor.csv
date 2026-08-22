@@ -1,0 +1,4 @@
+asset_id,timestamp,metric,value,safe_min,safe_max
+BOILER-99,2026-08-22T12:00:00Z,pressure,55.4,10.0,50.0
+PUMP-55,2026-08-22T12:05:00Z,vibration,1.2,0.0,3.5
+TURBINE-07,2026-08-22T12:10:00Z,temperature,820.0,100.0,750.0

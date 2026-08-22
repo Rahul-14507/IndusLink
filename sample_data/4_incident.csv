@@ -1,0 +1,3 @@
+asset_id,date,severity,description
+TURBINE-07,2026-08-21,4,Turbine chamber exhaust temperature spiked above limit
+BOILER-99,2026-08-10,2,Minor steam vent pressure relief valve flare

@@ -1,0 +1,4 @@
+asset_id,date,type,notes
+BOILER-99,2026-08-15,repair,Replaced critical steam valve and boiler pressure tubes
+PUMP-55,2026-07-20,routine,lubricated shaft bearings and replaced rubber O-rings
+TURBINE-07,2026-08-01,inspection,Rotor blade inspection completed and found minor soot buildup

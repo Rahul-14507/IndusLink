@@ -1,0 +1,4 @@
+asset_id,date,inspector,result,notes
+BOILER-99,2026-08-18,Sarah Connor,conditional,High flue gas temperature observed; needs checking
+PUMP-55,2026-08-20,Marcus Wright,pass,Vibration levels are well within nominal range
+TURBINE-07,2026-08-22,John Connor,fail,Discovered excessive rotor exhaust temperature spike
