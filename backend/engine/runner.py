@@ -111,7 +111,9 @@ def run_scoring_pipeline(asset_id: str, run_date: datetime.date = None) -> dict 
         # Attach latest sensor values for the WebSocket broadcast payload
         latest_sensor_data = {}
         for r in raw_data.get("sensor_readings", []):
-            metric_name = r["metric"].lower()
+            metric_name = r["metric"].lower().strip()
+            if "potentiometer" in metric_name:
+                continue
             if metric_name not in latest_sensor_data:
                 latest_sensor_data[metric_name] = float(r["value"])
         score_record["sensor_data"] = latest_sensor_data

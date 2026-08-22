@@ -62,21 +62,20 @@ function RiskRadarApp({ onLeaveApp }) {
             timestamp: score.run_at,
             temperature: score.sensor_data.temperature,
             humidity: score.sensor_data.humidity,
-            pressure: score.sensor_data.pressure,
-            raw_potentiometer: score.sensor_data.raw_potentiometer
+            pressure: score.sensor_data.pressure
           });
         }
 
         // Invalidate active safety queries
-        qc.invalidateQueries(["risk-queue"]);
-        qc.invalidateQueries(["early-warnings"]);
-        qc.invalidateQueries(["dashboard-trends"]);
-        qc.invalidateQueries(["audit-logs"]);
+        qc.invalidateQueries({ queryKey: ["risk-queue"] });
+        qc.invalidateQueries({ queryKey: ["early-warnings"] });
+        qc.invalidateQueries({ queryKey: ["dashboard-trends"] });
+        qc.invalidateQueries({ queryKey: ["audit-logs"] });
 
         // If currently viewing the updated asset, invalidate detail views
         if (selectedAssetId && selectedAssetId.toUpperCase() === score.asset_id.toUpperCase()) {
-          qc.invalidateQueries(["asset-detail", selectedAssetId]);
-          qc.invalidateQueries(["asset-history", selectedAssetId]);
+          qc.invalidateQueries({ queryKey: ["asset-detail", selectedAssetId] });
+          qc.invalidateQueries({ queryKey: ["asset-history", selectedAssetId] });
         }
       } catch (err) {
         console.error("Error parsing WS event data:", err);
@@ -172,13 +171,13 @@ function RiskRadarApp({ onLeaveApp }) {
     },
     onSuccess: (data) => {
       alert(`Safety run finished. Processed ${data.scored_successfully}/${data.total_assets} equipment assets.`);
-      qc.invalidateQueries(["risk-queue"]);
-      qc.invalidateQueries(["early-warnings"]);
-      qc.invalidateQueries(["dashboard-trends"]);
-      qc.invalidateQueries(["audit-logs"]);
+      qc.invalidateQueries({ queryKey: ["risk-queue"] });
+      qc.invalidateQueries({ queryKey: ["early-warnings"] });
+      qc.invalidateQueries({ queryKey: ["dashboard-trends"] });
+      qc.invalidateQueries({ queryKey: ["audit-logs"] });
       if (selectedAssetId) {
-        qc.invalidateQueries(["asset-detail", selectedAssetId]);
-        qc.invalidateQueries(["asset-history", selectedAssetId]);
+        qc.invalidateQueries({ queryKey: ["asset-detail", selectedAssetId] });
+        qc.invalidateQueries({ queryKey: ["asset-history", selectedAssetId] });
       }
     },
     onError: (err) => {
@@ -354,13 +353,13 @@ function RiskRadarApp({ onLeaveApp }) {
         isOpen={isImportOpen}
         onClose={() => setIsImportOpen(false)}
         onIngestSuccess={() => {
-          qc.invalidateQueries(["risk-queue"]);
-          qc.invalidateQueries(["early-warnings"]);
-          qc.invalidateQueries(["dashboard-trends"]);
-          qc.invalidateQueries(["audit-logs"]);
+          qc.invalidateQueries({ queryKey: ["risk-queue"] });
+          qc.invalidateQueries({ queryKey: ["early-warnings"] });
+          qc.invalidateQueries({ queryKey: ["dashboard-trends"] });
+          qc.invalidateQueries({ queryKey: ["audit-logs"] });
           if (selectedAssetId) {
-            qc.invalidateQueries(["asset-detail", selectedAssetId]);
-            qc.invalidateQueries(["asset-history", selectedAssetId]);
+            qc.invalidateQueries({ queryKey: ["asset-detail", selectedAssetId] });
+            qc.invalidateQueries({ queryKey: ["asset-history", selectedAssetId] });
           }
         }}
         apiBase={API_BASE}

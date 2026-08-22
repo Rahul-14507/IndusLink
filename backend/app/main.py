@@ -151,7 +151,7 @@ def get_asset_detail(asset_id: str):
                     """
                     SELECT DISTINCT ON (metric) metric, value, safe_min, safe_max, ts
                     FROM sensor_readings
-                    WHERE UPPER(asset_id) = %s
+                    WHERE UPPER(asset_id) = %s AND LOWER(metric) NOT LIKE '%%potentiometer%%'
                     ORDER BY metric, ts DESC
                     """,
                     (norm_id,)
@@ -174,7 +174,7 @@ def get_asset_detail(asset_id: str):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Failed to fetch asset detail: {e}")
+        logger.error(f"Failed to fetch asset detail: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Database query failed")
     finally:
         conn.close()

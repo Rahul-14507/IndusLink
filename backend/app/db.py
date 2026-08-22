@@ -82,9 +82,13 @@ def fetch_asset_data(asset_id: str, conn) -> dict:
         )
         incident_logs = cur.fetchall()
         
-        # Fetch sensor readings
+        # Fetch sensor readings (potentiometer debug readings are filtered from scoring)
         cur.execute(
-            "SELECT * FROM sensor_readings WHERE UPPER(asset_id) = %s ORDER BY ts DESC",
+            """
+            SELECT * FROM sensor_readings 
+            WHERE UPPER(asset_id) = %s AND LOWER(metric) NOT LIKE '%%potentiometer%%'
+            ORDER BY ts DESC
+            """,
             (norm_id,)
         )
         sensor_readings = cur.fetchall()

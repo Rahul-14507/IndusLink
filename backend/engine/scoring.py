@@ -15,7 +15,7 @@ class AssetData:
     ):
         self.asset_id = asset_id.strip().upper()
         self.equipment = equipment or {}
-        self.run_date = run_date or datetime.date.today()
+        self.run_date = run_date or datetime.datetime.now(datetime.timezone.utc).date()
         self.criticality = int(self.equipment.get("criticality") or 3)
 
         # Clean and normalize datasets (casing and sorting)
@@ -161,7 +161,7 @@ class AssetData:
         for r in self.sensor_readings:
             ts = r["ts"]
             delta_days = (self.run_date - ts.date()).days
-            if 0 <= delta_days <= 30:
+            if delta_days >= -1 and delta_days <= 30:
                 val = r.get("value")
                 s_min = r.get("safe_min")
                 s_max = r.get("safe_max")
@@ -244,7 +244,7 @@ def score_sensor_deviation(data: AssetData) -> float:
     for r in data.sensor_readings:
         ts = r["ts"]
         delta_days = (data.run_date - ts.date()).days
-        if 0 <= delta_days <= 30:
+        if delta_days >= -1 and delta_days <= 30:
             val = r.get("value")
             s_min = r.get("safe_min")
             s_max = r.get("safe_max")

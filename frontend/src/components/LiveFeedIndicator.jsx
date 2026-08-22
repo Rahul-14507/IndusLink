@@ -37,9 +37,6 @@ export default function LiveFeedIndicator({ active, latestReading, compact }) {
           <span>Temp: <strong className="text-ink font-semibold">{parseFloat(latestReading.temperature || 0).toFixed(1)}°C</strong></span>
           <span>Hum: <strong className="text-ink font-semibold">{parseFloat(latestReading.humidity || 0).toFixed(1)}%</strong></span>
           <span>Press: <strong className="text-ink font-semibold">{parseFloat(latestReading.pressure || 0).toFixed(2)} hPa</strong></span>
-          {latestReading.raw_potentiometer !== undefined && (
-            <span>Potentio: <strong className="text-ink font-semibold">{latestReading.raw_potentiometer}</strong></span>
-          )}
           <span className="text-ink-muted/70 font-mono ml-auto md:ml-0">
             ({new Date(latestReading.timestamp).toLocaleTimeString()})
           </span>

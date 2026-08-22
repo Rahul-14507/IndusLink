@@ -62,6 +62,32 @@ def get_limits_for_metric(asset_id: str, metric: str, conn) -> Tuple[Optional[fl
         
     return None, None
 
+def should_save_reading(asset_id: str, metric: str, value: float, conn) -> bool:
+    """
+    Implements deadband reporting/filtering. Returns False if the new value is identical 
+    to the last recorded value and less than 5 minutes have elapsed.
+    """
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT value, ts FROM sensor_readings
+                WHERE UPPER(asset_id) = %s AND metric = %s
+                ORDER BY ts DESC LIMIT 1
+                """,
+                (asset_id.strip().upper(), metric)
+            )
+            res = cur.fetchone()
+            if res:
+                last_value = float(res["value"])
+                last_ts = res["ts"]
+                time_delta = (datetime.datetime.now(datetime.timezone.utc) - last_ts).total_seconds()
+                if abs(value - last_value) < 0.001 and time_delta < 300:
+                    return False
+    except Exception as e:
+        logger.error(f"Error checking duplicate readings: {e}")
+    return True
+
 def on_message(client, userdata, msg):
     try:
         parts = msg.topic.split("/")
@@ -87,7 +113,7 @@ def on_message(client, userdata, msg):
         # Parse metrics
         metrics = ["temperature", "humidity", "pressure"]
         if "raw_potentiometer" in data:
-            metrics.append("raw_potentiometer")
+            logger.info(f"Live MQTT received debug trace: asset={asset_id} raw_potentiometer={data['raw_potentiometer']} [IGNORED]")
             
         conn = get_db_connection()
         try:
@@ -102,19 +128,21 @@ def on_message(client, userdata, msg):
                     logger.warning(f"MQTT Warning: Value for '{metric}' is not numeric ({data[metric]}): {num_err}")
                     continue
                     
-                safe_min, safe_max = get_limits_for_metric(asset_id, metric, conn)
-                
-                reading_data = {
-                    "asset_id": asset_id,
-                    "ts": datetime.datetime.now(datetime.timezone.utc),
-                    "metric": metric,
-                    "value": value,
-                    "safe_min": safe_min,
-                    "safe_max": safe_max,
-                    "source": "live"
-                }
-                save_sensor_reading(reading_data, conn)
-                logger.info(f"MQTT Ingested: {asset_id} -> {metric}: {value} (Safe: {safe_min} - {safe_max})")
+                if should_save_reading(asset_id, metric, value, conn):
+                    safe_min, safe_max = get_limits_for_metric(asset_id, metric, conn)
+                    reading_data = {
+                        "asset_id": asset_id,
+                        "ts": datetime.datetime.now(datetime.timezone.utc),
+                        "metric": metric,
+                        "value": value,
+                        "safe_min": safe_min,
+                        "safe_max": safe_max,
+                        "source": "live"
+                    }
+                    save_sensor_reading(reading_data, conn)
+                    logger.info(f"MQTT Ingested: {asset_id} -> {metric}: {value} (Safe: {safe_min} - {safe_max})")
+                else:
+                    logger.debug(f"MQTT Ignored Duplicate: {asset_id} -> {metric}: {value}")
         finally:
             conn.close()
             
