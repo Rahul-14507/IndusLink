@@ -107,23 +107,23 @@ export default function RiskQueueTable({ queue, onSelectAsset }) {
   return (
     <div className="space-y-4">
       {/* Filters Bar */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 bg-surface p-4 border border-border rounded">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 bg-surface p-4 border border-border rounded-xl shadow-sm">
         <div>
-          <label className="block text-xs font-semibold text-ink-muted uppercase tracking-wider mb-1.5">Search Asset</label>
+          <label className="block text-[10px] font-bold text-ink-muted uppercase tracking-wider mb-1.5 font-mono">Search Asset</label>
           <input
             type="text"
             placeholder="Search name or ID..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full text-sm px-3 py-1.5 bg-background border border-border rounded focus:outline-none focus:border-primary text-ink"
+            className="w-full text-sm px-3 py-1.5 bg-background border border-border rounded-lg focus:outline-none focus:border-[#1D3225] focus:ring-1 focus:ring-[#1D3225] transition-all text-ink font-sans"
           />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-ink-muted uppercase tracking-wider mb-1.5">Risk Level</label>
+          <label className="block text-[10px] font-bold text-ink-muted uppercase tracking-wider mb-1.5 font-mono">Risk Level</label>
           <select
             value={filterBucket}
             onChange={(e) => setFilterBucket(e.target.value)}
-            className="w-full text-sm px-3 py-1.5 bg-background border border-border rounded focus:outline-none focus:border-primary text-ink"
+            className="w-full text-sm px-3 py-1.5 bg-background border border-border rounded-lg focus:outline-none focus:border-[#1D3225] focus:ring-1 focus:ring-[#1D3225] transition-all text-ink font-sans"
           >
             <option value="all">All Risk Levels</option>
             <option value="high">High Risk</option>
@@ -132,22 +132,22 @@ export default function RiskQueueTable({ queue, onSelectAsset }) {
           </select>
         </div>
         <div>
-          <label className="block text-xs font-semibold text-ink-muted uppercase tracking-wider mb-1.5">Location</label>
+          <label className="block text-[10px] font-bold text-ink-muted uppercase tracking-wider mb-1.5 font-mono">Location</label>
           <select
             value={filterLocation}
             onChange={(e) => setFilterLocation(e.target.value)}
-            className="w-full text-sm px-3 py-1.5 bg-background border border-border rounded focus:outline-none focus:border-primary text-ink"
+            className="w-full text-sm px-3 py-1.5 bg-background border border-border rounded-lg focus:outline-none focus:border-[#1D3225] focus:ring-1 focus:ring-[#1D3225] transition-all text-ink font-sans"
           >
             <option value="all">All Locations</option>
             {locations.map(l => <option key={l} value={l}>{l}</option>)}
           </select>
         </div>
         <div>
-          <label className="block text-xs font-semibold text-ink-muted uppercase tracking-wider mb-1.5">Equipment Type</label>
+          <label className="block text-[10px] font-bold text-ink-muted uppercase tracking-wider mb-1.5 font-mono">Equipment Type</label>
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="w-full text-sm px-3 py-1.5 bg-background border border-border rounded focus:outline-none focus:border-primary text-ink"
+            className="w-full text-sm px-3 py-1.5 bg-background border border-border rounded-lg focus:outline-none focus:border-[#1D3225] focus:ring-1 focus:ring-[#1D3225] transition-all text-ink font-sans"
           >
             <option value="all">All Types</option>
             {types.map(t => <option key={t} value={t}>{t}</option>)}
@@ -156,7 +156,7 @@ export default function RiskQueueTable({ queue, onSelectAsset }) {
       </div>
 
       {/* Grid List */}
-      <div className="bg-surface border border-border rounded overflow-hidden shadow-sm">
+      <div className="bg-surface border border-border rounded-xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-border text-left">
             <thead className="bg-surface-muted text-ink-muted text-xs font-semibold uppercase tracking-wider select-none">
@@ -256,8 +256,8 @@ export default function RiskQueueTable({ queue, onSelectAsset }) {
                         )}
                       </div>
                     </td>
-                    <td className="hidden md:table-cell px-4 py-3 font-medium text-xs uppercase tracking-wider text-ink-muted">
-                      <span className="px-2 py-1 bg-surface-muted border border-border rounded">
+                    <td className="hidden md:table-cell px-4 py-3 font-semibold text-[10px] uppercase tracking-wider text-ink-muted font-mono whitespace-nowrap">
+                      <span className="px-2.5 py-1 bg-surface-muted border border-border rounded-full inline-block">
                         {row.recommended_action.replace(/_/g, ' ')}
                       </span>
                     </td>

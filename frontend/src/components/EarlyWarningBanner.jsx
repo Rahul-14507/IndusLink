@@ -13,10 +13,10 @@ export default function EarlyWarningBanner({ warnings, onSelectAsset }) {
       {activeWarnings.map((w) => (
         <div
           key={w.asset_id}
-          className="flex items-start justify-between p-4 bg-amber-50 border-l-4 border-accent rounded shadow-sm text-ink"
+          className="flex items-start justify-between p-4 bg-amber-50/60 border border-l-4 border-amber-200 border-l-[#D97706] rounded-xl shadow-sm text-ink"
         >
           <div className="flex space-x-3">
-            <AlertTriangle className="h-5 w-5 text-accent shrink-0 mt-0.5" />
+            <AlertTriangle className="h-5 w-5 text-[#D97706] shrink-0 mt-0.5" />
             <div>
               <p className="font-semibold text-sm">
                 Early Warning Alarm: {w.asset_name} ({w.asset_id})
@@ -27,7 +27,7 @@ export default function EarlyWarningBanner({ warnings, onSelectAsset }) {
               </p>
               <button
                 onClick={() => onSelectAsset(w.asset_id)}
-                className="text-xs text-primary font-medium hover:underline mt-2 inline-block"
+                className="text-xs text-[#1D3225] font-bold hover:underline mt-2 inline-block font-mono uppercase tracking-wider"
               >
                 Inspect Asset Details &rarr;
               </button>

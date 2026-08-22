@@ -25,7 +25,7 @@ export default function AuditLogTable({ auditLogs, onFilterAsset, activeAssetFil
   return (
     <div className="space-y-4">
       {/* Log Search Filter Bar */}
-      <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 bg-surface p-4 border border-border rounded shadow-sm">
+      <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 bg-surface p-4 border border-border rounded-xl shadow-sm">
         <div className="relative flex-grow max-w-md w-full">
           <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <Search className="h-4 w-4 text-ink-muted" />
@@ -35,12 +35,12 @@ export default function AuditLogTable({ auditLogs, onFilterAsset, activeAssetFil
             placeholder="Filter audit log by Asset ID (e.g. BOILER-01)..."
             value={searchAsset}
             onChange={(e) => setSearchAsset(e.target.value)}
-            className="w-full text-sm pl-9 pr-3 py-2 bg-background border border-border rounded focus:outline-none focus:border-primary text-ink"
+            className="w-full text-sm pl-9 pr-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:border-[#1D3225] focus:ring-1 focus:ring-[#1D3225] transition-all text-ink font-sans"
           />
         </div>
         <button
           type="submit"
-          className="w-full sm:w-auto px-4 py-2 bg-primary hover:bg-primary/95 text-white text-sm font-semibold rounded transition-colors uppercase tracking-wider"
+          className="w-full sm:w-auto px-5 py-2 bg-[#1D3225] hover:bg-[#15291D] text-white text-xs font-bold font-mono rounded-full transition-all uppercase tracking-wider whitespace-nowrap shadow-sm"
         >
           Apply Filter
         </button>
@@ -51,7 +51,7 @@ export default function AuditLogTable({ auditLogs, onFilterAsset, activeAssetFil
               setSearchAsset("");
               onFilterAsset("");
             }}
-            className="w-full sm:w-auto px-3 py-2 bg-surface hover:bg-surface-muted text-ink-muted text-sm border border-border rounded font-medium"
+            className="w-full sm:w-auto px-4 py-2 bg-surface hover:bg-surface-muted text-ink-muted text-xs border border-border rounded-full font-bold font-mono uppercase tracking-wider whitespace-nowrap shadow-sm"
           >
             Clear
           </button>
@@ -59,7 +59,7 @@ export default function AuditLogTable({ auditLogs, onFilterAsset, activeAssetFil
       </form>
 
       {/* Log Viewer Table */}
-      <div className="bg-surface border border-border rounded overflow-hidden shadow-sm">
+      <div className="bg-surface border border-border rounded-xl overflow-hidden shadow-sm">
         <table className="min-w-full divide-y divide-border text-left">
           <thead className="bg-surface-muted text-ink-muted text-xs font-semibold uppercase tracking-wider select-none">
             <tr>
@@ -121,7 +121,7 @@ export default function AuditLogTable({ auditLogs, onFilterAsset, activeAssetFil
                             <FileText className="h-4 w-4" />
                             <span>Audit Snapshot JSON Payload (Record ID: {log.id})</span>
                           </div>
-                          <pre className="bg-surface border border-border/85 rounded p-4 overflow-x-auto text-xs text-ink leading-relaxed font-mono shadow-inner max-h-96">
+                          <pre className="bg-[#F6F4EE]/60 border border-border/85 rounded-lg p-4 overflow-x-auto text-xs text-ink leading-relaxed font-mono shadow-inner max-h-96">
                             {formatJSON({
                               record_id: log.id,
                               asset_id: log.asset_id,

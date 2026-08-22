@@ -37,28 +37,28 @@ export default function DashboardTrends({ trends }) {
       {/* Risk Aggregates */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Risk by Type */}
-        <div className="bg-surface border border-border rounded p-6 shadow-sm">
+        <div className="bg-surface border border-border rounded-xl p-6 shadow-sm">
           <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest border-b border-border pb-2 mb-4">
             Risk Distribution by Equipment Type
           </h3>
           <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={risk_by_type} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E4E6E3" />
-                <XAxis dataKey="type" stroke="#5B6660" fontSize={10} tickLine={false} />
-                <YAxis stroke="#5B6660" fontSize={10} tickLine={false} allowDecimals={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#E3DFD5" />
+                <XAxis dataKey="type" stroke="#3B4C41" fontSize={10} tickLine={false} />
+                <YAxis stroke="#3B4C41" fontSize={10} tickLine={false} allowDecimals={false} />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "#FFFFFF",
-                    border: "1px solid #E4E6E3",
+                    backgroundColor: "#FAF8F5",
+                    border: "1px solid #E3DFD5",
                     fontFamily: "Inter, sans-serif",
                     fontSize: "12px",
-                    color: "#1F2A24"
+                    color: "#1D3225"
                   }}
                 />
                 <Legend iconType="circle" wrapperStyle={{ fontSize: 10 }} />
-                <Bar dataKey="low" stackId="a" fill="#2E8B57" name="Low Risk" />
-                <Bar dataKey="medium" stackId="a" fill="#E8871E" name="Medium Risk" />
+                <Bar dataKey="low" stackId="a" fill="#10B981" name="Low Risk" />
+                <Bar dataKey="medium" stackId="a" fill="#D97706" name="Medium Risk" />
                 <Bar dataKey="high" stackId="a" fill="#C0392B" name="High Risk" />
               </BarChart>
             </ResponsiveContainer>
@@ -66,28 +66,28 @@ export default function DashboardTrends({ trends }) {
         </div>
 
         {/* Risk by Location */}
-        <div className="bg-surface border border-border rounded p-6 shadow-sm">
+        <div className="bg-surface border border-border rounded-xl p-6 shadow-sm">
           <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest border-b border-border pb-2 mb-4">
             Risk Distribution by Plant Location
           </h3>
           <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={risk_by_location} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E4E6E3" />
-                <XAxis dataKey="location" stroke="#5B6660" fontSize={10} tickLine={false} />
-                <YAxis stroke="#5B6660" fontSize={10} tickLine={false} allowDecimals={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#E3DFD5" />
+                <XAxis dataKey="location" stroke="#3B4C41" fontSize={10} tickLine={false} />
+                <YAxis stroke="#3B4C41" fontSize={10} tickLine={false} allowDecimals={false} />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "#FFFFFF",
-                    border: "1px solid #E4E6E3",
+                    backgroundColor: "#FAF8F5",
+                    border: "1px solid #E3DFD5",
                     fontFamily: "Inter, sans-serif",
                     fontSize: "12px",
-                    color: "#1F2A24"
+                    color: "#1D3225"
                   }}
                 />
                 <Legend iconType="circle" wrapperStyle={{ fontSize: 10 }} />
-                <Bar dataKey="low" stackId="a" fill="#2E8B57" name="Low Risk" />
-                <Bar dataKey="medium" stackId="a" fill="#E8871E" name="Medium Risk" />
+                <Bar dataKey="low" stackId="a" fill="#10B981" name="Low Risk" />
+                <Bar dataKey="medium" stackId="a" fill="#D97706" name="Medium Risk" />
                 <Bar dataKey="high" stackId="a" fill="#C0392B" name="High Risk" />
               </BarChart>
             </ResponsiveContainer>
@@ -96,7 +96,7 @@ export default function DashboardTrends({ trends }) {
       </div>
 
       {/* Action Backlog Bar Chart */}
-      <div className="bg-surface border border-border rounded p-6 shadow-sm max-w-4xl mx-auto">
+      <div className="bg-surface border border-border rounded-xl p-6 shadow-sm max-w-4xl mx-auto">
         <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest border-b border-border pb-2 mb-4">
           Action Backlog Workload Counts
         </h3>
@@ -108,12 +108,12 @@ export default function DashboardTrends({ trends }) {
                 data={action_backlog}
                 margin={{ top: 10, right: 10, left: isMobile ? -35 : 20, bottom: 0 }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#E4E6E3" horizontal={false} />
-                <XAxis type="number" stroke="#5B6660" fontSize={10} tickLine={false} allowDecimals={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#E3DFD5" horizontal={false} />
+                <XAxis type="number" stroke="#3B4C41" fontSize={10} tickLine={false} allowDecimals={false} />
                 <YAxis
                   dataKey="action"
                   type="category"
-                  stroke="#5B6660"
+                  stroke="#3B4C41"
                   fontSize={isMobile ? 8 : 9}
                   tickLine={false}
                   width={isMobile ? 70 : 150}
@@ -121,16 +121,16 @@ export default function DashboardTrends({ trends }) {
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "#FFFFFF",
-                    border: "1px solid #E4E6E3",
+                    backgroundColor: "#FAF8F5",
+                    border: "1px solid #E3DFD5",
                     fontFamily: "Inter, sans-serif",
                     fontSize: "12px",
-                    color: "#1F2A24"
+                    color: "#1D3225"
                   }}
                 />
-                <Bar dataKey="count" fill="#0E7C7B" radius={[0, 4, 4, 0]} name="Backlog Volume">
+                <Bar dataKey="count" fill="#1D3225" radius={[0, 4, 4, 0]} name="Backlog Volume">
                   {action_backlog.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill="#0E7C7B" />
+                    <Cell key={`cell-${index}`} fill="#1D3225" />
                   ))}
                 </Bar>
               </BarChart>

@@ -39,9 +39,9 @@ export default function AssetDetailPage({ assetId, assetDetail, history, onBack 
 
   const getBucketBorder = (bucket) => {
     const b = (bucket || "low").toLowerCase();
-    if (b === "high") return "border-risk-high/30 bg-red-50/50";
-    if (b === "medium") return "border-risk-medium/30 bg-amber-50/50";
-    return "border-emerald-200 bg-emerald-50/20";
+    if (b === "high") return "border-risk-high/30 bg-red-50/50 rounded-xl";
+    if (b === "medium") return "border-risk-medium/30 bg-amber-50/50 rounded-xl";
+    return "border-emerald-200 bg-emerald-50/20 rounded-xl";
   };
 
   return (
@@ -50,7 +50,7 @@ export default function AssetDetailPage({ assetId, assetDetail, history, onBack 
       <div className="flex items-center space-x-3">
         <button
           onClick={onBack}
-          className="flex items-center space-x-1 px-3 py-1.5 bg-surface hover:bg-surface-muted border border-border rounded text-sm text-ink-muted hover:text-ink transition-colors font-medium"
+          className="flex items-center space-x-1 px-4 py-1.5 bg-surface hover:bg-surface-muted border border-border rounded-full text-xs font-bold text-ink-muted hover:text-ink transition-colors font-mono uppercase tracking-wider"
         >
           <ArrowLeft className="h-4 w-4" />
           <span>Back to priority list</span>
@@ -58,7 +58,7 @@ export default function AssetDetailPage({ assetId, assetDetail, history, onBack 
       </div>
 
       {/* Asset Meta Info Card */}
-      <div className="bg-surface border border-border rounded p-6 shadow-sm grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="bg-surface border border-border rounded-xl p-6 shadow-sm grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
           <h2 className="text-xl font-bold text-ink mb-1">{assetDetail.name}</h2>
           <p className="text-xs text-ink-muted uppercase tracking-wider font-semibold">ID: {assetDetail.asset_id}</p>
@@ -93,7 +93,7 @@ export default function AssetDetailPage({ assetId, assetDetail, history, onBack 
         {/* Left column: Sub-scores & Actions */}
         <div className="lg:col-span-1 space-y-6">
           {/* Risk Score Summary */}
-          <div className="bg-surface border border-border rounded p-6 shadow-sm">
+          <div className="bg-surface border border-border rounded-xl p-6 shadow-sm">
             <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest border-b border-border pb-2 mb-4">
               Current Risk Assessment
             </h3>
@@ -133,7 +133,7 @@ export default function AssetDetailPage({ assetId, assetDetail, history, onBack 
           </div>
 
           {/* Sub-score Bars */}
-          <div className="bg-surface border border-border rounded p-6 shadow-sm">
+          <div className="bg-surface border border-border rounded-xl p-6 shadow-sm">
             <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest border-b border-border pb-2 mb-4">
               Sub-Score Breakdown
             </h3>
@@ -161,7 +161,7 @@ export default function AssetDetailPage({ assetId, assetDetail, history, onBack 
 
           {/* Action Recommendation Card */}
           {scoreRecord && (
-            <div className={`border rounded p-5 shadow-sm ${getBucketBorder(scoreRecord.bucket)}`}>
+            <div className={`border p-5 shadow-sm ${getBucketBorder(scoreRecord.bucket)}`}>
               <h4 className="text-xs font-bold text-ink-muted uppercase tracking-wider mb-1">Recommended Operator Action</h4>
               <div className="text-base font-bold text-ink capitalize mb-3 flex items-center">
                 <Wrench className="h-4 w-4 mr-2 text-primary" />
@@ -169,7 +169,7 @@ export default function AssetDetailPage({ assetId, assetDetail, history, onBack 
               </div>
               <button 
                 onClick={() => alert(`Operational Ticket Created for: ${scoreRecord.recommended_action.replace(/_/g, ' ').toUpperCase()}`)}
-                className="w-full py-2 bg-primary hover:bg-primary/95 text-white font-semibold text-xs tracking-wider uppercase rounded shadow-sm transition-colors"
+                className="w-full py-2.5 bg-primary hover:bg-[#15291D] text-white font-bold text-xs tracking-wider uppercase rounded-full shadow-sm transition-all font-mono"
               >
                 Dispatch Work Order
               </button>
@@ -180,15 +180,15 @@ export default function AssetDetailPage({ assetId, assetDetail, history, onBack 
         {/* Right column: Explanations & Line Chart */}
         <div className="lg:col-span-2 space-y-6">
           {/* Explanation Text Card */}
-          <div className="bg-surface border border-border rounded p-6 shadow-sm">
+          <div className="bg-surface border border-border rounded-xl p-6 shadow-sm">
             <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest border-b border-border pb-2 mb-4 flex items-center justify-between">
               <span>Safety assessment summary</span>
-              <span className="text-[10px] font-medium tracking-normal text-ink-muted normal-case bg-surface-muted border border-border px-1.5 py-0.5 rounded">
+              <span className="text-[10px] font-medium tracking-normal text-ink-muted normal-case bg-[#F6F4EE] border border-border px-1.5 py-0.5 rounded">
                 AI Explained
               </span>
             </h3>
             {scoreRecord ? (
-              <div className="p-4 bg-background border border-border/80 rounded italic text-ink/90 text-sm leading-relaxed font-sans shadow-inner">
+              <div className="p-4 bg-[#F6F4EE]/60 border border-border/80 rounded-lg italic text-ink/90 text-sm leading-relaxed font-sans shadow-inner">
                 {scoreRecord.explanation_text ? (
                   `"${scoreRecord.explanation_text}"`
                 ) : (
@@ -204,7 +204,7 @@ export default function AssetDetailPage({ assetId, assetDetail, history, onBack 
 
           {/* Real-time Telemetry Grid */}
           {scoreRecord && scoreRecord.sensor_data && (
-            <div className="bg-surface border border-border rounded p-6 shadow-sm">
+            <div className="bg-surface border border-border rounded-xl p-6 shadow-sm">
               <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest border-b border-border pb-2 mb-4">
                 Real-Time Telemetry Feed
               </h3>
@@ -218,10 +218,10 @@ export default function AssetDetailPage({ assetId, assetDetail, history, onBack 
                   return (
                     <div 
                       key={metric} 
-                      className={`p-4 rounded border transition-colors ${
+                      className={`p-4 rounded-lg border transition-colors ${
                         isBreaching 
                           ? "border-risk-high/30 bg-red-50/20" 
-                          : "border-border bg-background"
+                          : "border-border bg-[#F6F4EE]/40"
                       }`}
                     >
                       <div className="flex justify-between items-start">
@@ -256,7 +256,7 @@ export default function AssetDetailPage({ assetId, assetDetail, history, onBack 
           )}
 
           {/* Historical Trend Chart */}
-          <div className="bg-surface border border-border rounded p-6 shadow-sm">
+          <div className="bg-surface border border-border rounded-xl p-6 shadow-sm">
             <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest border-b border-border pb-2 mb-4">
               Historical safety trend
             </h3>
@@ -264,32 +264,32 @@ export default function AssetDetailPage({ assetId, assetDetail, history, onBack 
               <div className="h-64 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#E4E6E3" />
-                    <XAxis dataKey="time" stroke="#5B6660" fontSize={10} tickLine={false} />
-                    <YAxis domain={[0, 100]} stroke="#5B6660" fontSize={10} tickLine={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#E3DFD5" />
+                    <XAxis dataKey="time" stroke="#3B4C41" fontSize={10} tickLine={false} />
+                    <YAxis domain={[0, 100]} stroke="#3B4C41" fontSize={10} tickLine={false} />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "#FFFFFF",
-                        border: "1px solid #E4E6E3",
+                        backgroundColor: "#FAF8F5",
+                        border: "1px solid #E3DFD5",
                         fontFamily: "Inter, sans-serif",
                         fontSize: "12px",
-                        color: "#1F2A24"
+                        color: "#1D3225"
                       }}
                     />
                     
                     {/* Horizontal zone bands */}
-                    <ReferenceArea y1={0} y2={40} fill="#2E8B57" fillOpacity={0.03} />
-                    <ReferenceArea y1={40} y2={70} fill="#E8871E" fillOpacity={0.03} />
+                    <ReferenceArea y1={0} y2={40} fill="#10B981" fillOpacity={0.03} />
+                    <ReferenceArea y1={40} y2={70} fill="#D97706" fillOpacity={0.03} />
                     <ReferenceArea y1={70} y2={100} fill="#C0392B" fillOpacity={0.03} />
 
                     {/* Reference threshold lines */}
-                    <ReferenceLine y={40} stroke="#E8871E" strokeDasharray="3 3" strokeOpacity={0.5} />
+                    <ReferenceLine y={40} stroke="#D97706" strokeDasharray="3 3" strokeOpacity={0.5} />
                     <ReferenceLine y={70} stroke="#C0392B" strokeDasharray="3 3" strokeOpacity={0.5} />
 
                     <Line
                       type="monotone"
                       dataKey="score"
-                      stroke="#0E7C7B"
+                      stroke="#1D3225"
                       strokeWidth={3}
                       dot={{ r: 4, strokeWidth: 1 }}
                       activeDot={{ r: 6 }}

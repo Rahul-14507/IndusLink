@@ -30,9 +30,53 @@ const queryClient = new QueryClient({
   },
 });
 
-function RiskRadarApp({ onLeaveApp }) {
-  const [activeTab, setActiveTab] = useState("queue"); // "queue" | "trends" | "audit"
-  const [selectedAssetId, setSelectedAssetId] = useState(null);
+// --- Client-Side Routing Utilities ---
+export function parseRoute() {
+  const path = window.location.pathname;
+  if (path === "/" || path === "") {
+    return { page: "landing" };
+  }
+  if (path.startsWith("/console")) {
+    const parts = path.split("/").filter(Boolean); // e.g. ["console", "trends"] or ["console", "asset", "BOILER-01"]
+    if (parts.length === 1) {
+      return { page: "console", tab: "queue" };
+    }
+    if (parts[1] === "trends") {
+      return { page: "console", tab: "trends" };
+    }
+    if (parts[1] === "audit") {
+      return { page: "console", tab: "audit" };
+    }
+    if (parts[1] === "asset" && parts[2]) {
+      return { page: "console", assetId: parts[2] };
+    }
+    return { page: "console", tab: "queue" };
+  }
+  return { page: "landing" };
+}
+
+export const navigate = (url) => {
+  window.history.pushState(null, "", url);
+  window.dispatchEvent(new PopStateEvent("popstate"));
+};
+
+export function useCurrentRoute() {
+  const [route, setRoute] = useState(parseRoute());
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setRoute(parseRoute());
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  return route;
+}
+
+function RiskRadarApp({ onLeaveApp, currentRoute }) {
+  const activeTab = currentRoute.tab || "queue";
+  const selectedAssetId = currentRoute.assetId || null;
   const [auditAssetFilter, setAuditAssetFilter] = useState("");
   const [isPulseActive, setIsPulseActive] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
@@ -186,53 +230,62 @@ function RiskRadarApp({ onLeaveApp }) {
   });
 
   const handleSelectAsset = (assetId) => {
-    setSelectedAssetId(assetId);
+    navigate("/console/asset/" + assetId);
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background font-sans text-ink">
+    <div className="min-h-screen flex flex-col bg-background font-sans text-ink bg-grid-warm pt-4">
       {/* Top Banner Navigation */}
-      <header className="sticky top-0 z-30 bg-surface border-b border-border shadow-sm px-4 md:px-6 py-3 md:py-4 flex flex-col md:flex-row md:items-center md:justify-between space-y-3 md:space-y-0">
-        <div className="flex items-center justify-between w-full md:w-auto">
-          <div className="flex items-center space-x-3">
-            <ShieldAlert className="h-6 w-6 text-primary" />
-            <h1 className="text-lg font-black tracking-tight uppercase">RiskRadar</h1>
+      <header className="sticky top-4 z-30 mx-auto w-[92%] max-w-7xl bg-[#FAF8F5]/85 backdrop-blur-md border border-border px-5 py-2.5 flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-3 lg:space-y-0 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.04)] transition-all duration-300">
+        <div className="flex items-center justify-between w-full lg:w-auto">
+          <div 
+            onClick={onLeaveApp} 
+            className="flex items-center space-x-3 cursor-pointer hover:opacity-85 transition-opacity"
+            title="Back to Landing Page"
+          >
+            <div className="bg-[#1D3225]/5 border border-[#1D3225]/20 p-2 rounded-lg shadow-sm">
+              <ShieldAlert className="h-5 w-5 text-[#1D3225]" />
+            </div>
+            <div>
+              <h1 className="text-sm font-black tracking-widest text-[#1D3225] font-mono leading-none">INDUSLINK</h1>
+              <p className="text-[9px] text-[#3B4C41] tracking-widest font-mono mt-0.5 uppercase">// PREDICTIVE CONSOLE</p>
+            </div>
           </div>
           {/* Mobile-only Live Indicator location next to logo */}
-          <div className="flex items-center md:hidden">
+          <div className="flex items-center lg:hidden">
             <LiveFeedIndicator active={isPulseActive} />
           </div>
         </div>
 
         {/* Tab Selection */}
         {!selectedAssetId && (
-          <nav className="flex space-x-1 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
+          <nav className="flex space-x-1.5 w-full lg:w-auto overflow-x-auto pb-1 lg:pb-0 font-mono">
             <button
-              onClick={() => setActiveTab("queue")}
-              className={`flex-1 md:flex-none text-center px-3 md:px-4 py-2 text-[10px] md:text-xs font-bold uppercase tracking-wider border rounded transition-colors whitespace-nowrap ${
+              onClick={() => navigate("/console")}
+              className={`flex-1 lg:flex-none text-center px-4 py-2 text-[10px] font-bold uppercase tracking-wider border rounded-full transition-all whitespace-nowrap ${
                 activeTab === "queue"
-                  ? "bg-primary text-white border-primary"
-                  : "bg-surface text-ink-muted border-border hover:bg-surface-muted"
+                  ? "bg-[#1D3225] text-[#FAF8F5] border-[#1D3225] shadow-sm"
+                  : "bg-[#FAF8F5]/50 text-[#3B4C41] border-border hover:bg-[#FAF8F5]"
               }`}
             >
               Risk Queue
             </button>
             <button
-              onClick={() => setActiveTab("trends")}
-              className={`flex-1 md:flex-none text-center px-3 md:px-4 py-2 text-[10px] md:text-xs font-bold uppercase tracking-wider border rounded transition-colors whitespace-nowrap ${
+              onClick={() => navigate("/console/trends")}
+              className={`flex-1 lg:flex-none text-center px-4 py-2 text-[10px] font-bold uppercase tracking-wider border rounded-full transition-all whitespace-nowrap ${
                 activeTab === "trends"
-                  ? "bg-primary text-white border-primary"
-                  : "bg-surface text-ink-muted border-border hover:bg-surface-muted"
+                  ? "bg-[#1D3225] text-[#FAF8F5] border-[#1D3225] shadow-sm"
+                  : "bg-[#FAF8F5]/50 text-[#3B4C41] border-border hover:bg-[#FAF8F5]"
               }`}
             >
               Plant Trends
             </button>
             <button
-              onClick={() => setActiveTab("audit")}
-              className={`flex-1 md:flex-none text-center px-3 md:px-4 py-2 text-[10px] md:text-xs font-bold uppercase tracking-wider border rounded transition-colors whitespace-nowrap ${
+              onClick={() => navigate("/console/audit")}
+              className={`flex-1 lg:flex-none text-center px-4 py-2 text-[10px] font-bold uppercase tracking-wider border rounded-full transition-all whitespace-nowrap ${
                 activeTab === "audit"
-                  ? "bg-primary text-white border-primary"
-                  : "bg-surface text-ink-muted border-border hover:bg-surface-muted"
+                  ? "bg-[#1D3225] text-[#FAF8F5] border-[#1D3225] shadow-sm"
+                  : "bg-[#FAF8F5]/50 text-[#3B4C41] border-border hover:bg-[#FAF8F5]"
               }`}
             >
               Audit Trail
@@ -241,14 +294,14 @@ function RiskRadarApp({ onLeaveApp }) {
         )}
 
         {/* Live Indicator & Admin Controls */}
-        <div className="flex items-center justify-between md:justify-end space-x-2 md:space-x-4 w-full md:w-auto">
-          <div className="hidden md:flex">
+        <div className="flex items-center justify-between lg:justify-end space-x-2 lg:space-x-3 w-full lg:w-auto">
+          <div className="hidden lg:flex">
             <LiveFeedIndicator active={isPulseActive} compact={true} />
           </div>
 
           <button
             onClick={() => setIsImportOpen(true)}
-            className="flex-grow md:flex-grow-0 flex items-center justify-center space-x-1.5 px-3 py-2 md:py-1.5 bg-surface hover:bg-surface-muted border border-border text-ink-muted hover:text-ink text-[10px] md:text-xs font-bold uppercase tracking-wider rounded transition-colors shadow-sm"
+            className="flex-grow lg:flex-grow-0 flex items-center justify-center space-x-1.5 px-4 py-2 bg-white/60 hover:bg-white border border-border text-[#3B4C41] hover:text-[#1D3225] text-[10px] font-bold font-mono uppercase tracking-wider rounded-full transition-all shadow-sm whitespace-nowrap"
           >
             <Upload className="h-3.5 w-3.5" />
             <span>Import CSV</span>
@@ -257,9 +310,9 @@ function RiskRadarApp({ onLeaveApp }) {
           <button
             onClick={() => runScoringBatch.mutate()}
             disabled={runScoringBatch.isPending}
-            className="flex-grow md:flex-grow-0 flex items-center justify-center space-x-1.5 px-3 py-2 md:py-1.5 bg-accent hover:bg-accent/90 disabled:bg-accent/50 text-white text-[10px] md:text-xs font-bold uppercase tracking-wider rounded transition-colors shadow-sm"
+            className="flex-grow lg:flex-grow-0 flex items-center justify-center space-x-1.5 px-4 py-2 bg-[#1D3225] hover:bg-[#15291D] disabled:bg-[#1D3225]/50 text-[#FAF8F5] text-[10px] font-bold font-mono uppercase tracking-wider rounded-full transition-all shadow-sm whitespace-nowrap"
           >
-            <Play className="h-3.5 w-3.5 fill-white" />
+            <Play className="h-3.5 w-3.5 fill-[#FAF8F5]" />
             <span>{runScoringBatch.isPending ? "Running..." : "Evaluate Safety"}</span>
           </button>
         </div>
@@ -278,7 +331,7 @@ function RiskRadarApp({ onLeaveApp }) {
             assetId={selectedAssetId}
             assetDetail={assetDetail}
             history={assetHistory}
-            onBack={() => setSelectedAssetId(null)}
+            onBack={() => navigate("/console")}
           />
         ) : (
           /* Multi-Tab Operational Views */
@@ -369,21 +422,17 @@ function RiskRadarApp({ onLeaveApp }) {
 }
 
 export default function App() {
-  const [showApp, setShowApp] = useState(() => {
-    return window.location.pathname === "/console";
-  });
-
-  const handleEnterApp = () => {
-    setShowApp(true);
-    window.history.pushState({ path: "/console" }, "", "/console");
-  };
+  const route = useCurrentRoute();
 
   return (
     <QueryClientProvider client={queryClient}>
-      {showApp ? (
-        <RiskRadarApp />
+      {route.page === "console" ? (
+        <RiskRadarApp 
+          onLeaveApp={() => navigate("/")} 
+          currentRoute={route}
+        />
       ) : (
-        <LandingPage onEnterApp={handleEnterApp} />
+        <LandingPage onEnterApp={() => navigate("/console")} />
       )}
     </QueryClientProvider>
   );
