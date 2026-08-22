@@ -44,6 +44,7 @@ def run_seed():
                 ("VALVE-13", "Pressure Regulating Valve P2", "valve", "Manifold Pipeline B", datetime.date(2023, 7, 19), 4),
                 ("CHILLER-14", "Process Chiller Unit C1", "chiller", "Utility Block", datetime.date(2020, 5, 25), 4),
                 ("BOILER-15", "Low Pressure Steam Boiler E", "boiler", "South Wing", datetime.date(2023, 12, 15), 3),
+                ("AGRLINK-DEMO-001", "Wokwi ESP32 Sensor Hub", "sensor_hub", "IoT Demo Lab", datetime.date(2026, 8, 22), 4),
             ]
             
             cur.executemany(

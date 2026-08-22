@@ -1,5 +1,6 @@
 import datetime
 import logging
+import os
 import threading
 from typing import Tuple, Optional
 import paho.mqtt.client as mqtt
@@ -8,11 +9,16 @@ from backend.engine.runner import run_scoring_pipeline
 
 logger = logging.getLogger(__name__)
 
-BROKER = "broker.hivemq.com"
-PORT = 1883
-TOPIC_PATTERN = "riskradar/+/+"
+BROKER = os.environ.get("MQTT_BROKER", "broker.hivemq.com")
+PORT = int(os.environ.get("MQTT_PORT", "1883"))
+TOPIC_PATTERN = os.environ.get("MQTT_TOPIC", "agrlink/+/readings")
 
-_mqtt_client = None
+DEFAULT_LIMITS = {
+    "temperature": (15.0, 40.0),
+    "humidity": (30.0, 80.0),
+    "pressure": (950.0, 1050.0),
+    "vibration": (0.0, 10.0)
+}
 
 def get_limits_for_metric(asset_id: str, metric: str, conn) -> Tuple[Optional[float], Optional[float]]:
     """
@@ -39,45 +45,76 @@ def get_limits_for_metric(asset_id: str, metric: str, conn) -> Tuple[Optional[fl
     except Exception as e:
         logger.error(f"Error querying safe limits: {e}")
         
-    # Default fallbacks
-    metric_lower = metric.lower()
+    # Centralized fallbacks
+    metric_lower = metric.lower().strip()
+    if metric_lower in DEFAULT_LIMITS:
+        return DEFAULT_LIMITS[metric_lower]
+        
+    # Wildcard checks
     if "temp" in metric_lower:
-        return 20.0, 100.0
+        return DEFAULT_LIMITS["temperature"]
     elif "press" in metric_lower:
-        return 5.0, 50.0
+        return DEFAULT_LIMITS["pressure"]
+    elif "hum" in metric_lower:
+        return DEFAULT_LIMITS["humidity"]
     elif "vib" in metric_lower:
-        return 0.0, 10.0
+        return DEFAULT_LIMITS["vibration"]
+        
     return None, None
 
 def on_message(client, userdata, msg):
     try:
-        # Topic pattern is riskradar/<asset_id>/<metric>
         parts = msg.topic.split("/")
         if len(parts) != 3:
             return
         
-        _, asset_id, metric = parts
+        prefix, asset_id, suffix = parts
+        if prefix.lower() not in {"agrlink", "agrilink"} or suffix.lower() != "readings":
+            return
+            
         asset_id = asset_id.strip().upper()
-        
         payload_str = msg.payload.decode("utf-8")
-        value = float(payload_str)
         
-        logger.info(f"MQTT Ingestion: Received telemetry for {asset_id} -> {metric}: {value}")
+        logger.info(f"MQTT Ingestion: Received telemetry payload for {asset_id}: {payload_str}")
         
+        import json
+        try:
+            data = json.loads(payload_str)
+        except ValueError as json_err:
+            logger.warning(f"MQTT Ignored: Payload is not valid JSON on topic {msg.topic}: {json_err}")
+            return
+            
+        # Parse metrics
+        metrics = ["temperature", "humidity", "pressure"]
+        if "raw_potentiometer" in data:
+            metrics.append("raw_potentiometer")
+            
         conn = get_db_connection()
         try:
-            safe_min, safe_max = get_limits_for_metric(asset_id, metric, conn)
-            
-            reading_data = {
-                "asset_id": asset_id,
-                "ts": datetime.datetime.now(datetime.timezone.utc),
-                "metric": metric,
-                "value": value,
-                "safe_min": safe_min,
-                "safe_max": safe_max,
-                "source": "live"
-            }
-            save_sensor_reading(reading_data, conn)
+            for metric in metrics:
+                if metric not in data:
+                    logger.warning(f"MQTT Warning: Metric '{metric}' missing in payload from {asset_id}")
+                    continue
+                    
+                try:
+                    value = float(data[metric])
+                except (ValueError, TypeError) as num_err:
+                    logger.warning(f"MQTT Warning: Value for '{metric}' is not numeric ({data[metric]}): {num_err}")
+                    continue
+                    
+                safe_min, safe_max = get_limits_for_metric(asset_id, metric, conn)
+                
+                reading_data = {
+                    "asset_id": asset_id,
+                    "ts": datetime.datetime.now(datetime.timezone.utc),
+                    "metric": metric,
+                    "value": value,
+                    "safe_min": safe_min,
+                    "safe_max": safe_max,
+                    "source": "live"
+                }
+                save_sensor_reading(reading_data, conn)
+                logger.info(f"MQTT Ingested: {asset_id} -> {metric}: {value} (Safe: {safe_min} - {safe_max})")
         finally:
             conn.close()
             
@@ -91,11 +128,44 @@ def on_connect(client, userdata, flags, rc, properties=None):
     logger.info(f"MQTT connected with result code: {rc}")
     client.subscribe(TOPIC_PATTERN)
     logger.info(f"MQTT Subscribed to: {TOPIC_PATTERN}")
+    
+    # Also subscribe to the alternate spelling for robustness
+    if "agrlink" in TOPIC_PATTERN:
+        alt_topic = TOPIC_PATTERN.replace("agrlink", "agrilink")
+        client.subscribe(alt_topic)
+        logger.info(f"MQTT Subscribed to alternate: {alt_topic}")
+    elif "agrilink" in TOPIC_PATTERN:
+        alt_topic = TOPIC_PATTERN.replace("agrilink", "agrlink")
+        client.subscribe(alt_topic)
+        logger.info(f"MQTT Subscribed to alternate: {alt_topic}")
 
 def start_listener():
     global _mqtt_client
     logger.info("Initializing MQTT listener background task...")
     
+    # Auto-provision Wokwi demo asset AGRLINK-DEMO-001 if missing
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT asset_id FROM equipment WHERE UPPER(asset_id) = 'AGRLINK-DEMO-001'")
+            if not cur.fetchone():
+                logger.info("Auto-provisioning demo asset AGRLINK-DEMO-001...")
+                cur.execute(
+                    """
+                    INSERT INTO equipment (asset_id, name, type, location, install_date, criticality)
+                    VALUES ('AGRLINK-DEMO-001', 'Wokwi ESP32 Sensor Hub', 'sensor_hub', 'IoT Demo Lab', CURRENT_DATE, 4)
+                    """
+                )
+                conn.commit()
+                logger.info("Demo asset AGRLINK-DEMO-001 provisioned successfully.")
+    except Exception as e:
+        logger.error(f"Failed to auto-provision demo asset: {e}")
+        if conn:
+            conn.rollback()
+    finally:
+        if conn:
+            conn.close()
+            
     try:
         # Determine client signature based on paho-mqtt version installed
         if hasattr(mqtt, "CallbackAPIVersion"):

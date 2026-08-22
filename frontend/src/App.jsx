@@ -36,6 +36,7 @@ function RiskRadarApp({ onLeaveApp }) {
   const [auditAssetFilter, setAuditAssetFilter] = useState("");
   const [isPulseActive, setIsPulseActive] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [latestLiveReading, setLatestLiveReading] = useState(null);
 
   const qc = useQueryClient();
 
@@ -54,6 +55,17 @@ function RiskRadarApp({ onLeaveApp }) {
         // Pulse live indicator
         setIsPulseActive(true);
         setTimeout(() => setIsPulseActive(false), 1200);
+
+        if (score.sensor_data) {
+          setLatestLiveReading({
+            assetId: score.asset_id,
+            timestamp: score.run_at,
+            temperature: score.sensor_data.temperature,
+            humidity: score.sensor_data.humidity,
+            pressure: score.sensor_data.pressure,
+            raw_potentiometer: score.sensor_data.raw_potentiometer
+          });
+        }
 
         // Invalidate active safety queries
         qc.invalidateQueries(["risk-queue"]);
@@ -232,7 +244,7 @@ function RiskRadarApp({ onLeaveApp }) {
         {/* Live Indicator & Admin Controls */}
         <div className="flex items-center justify-between md:justify-end space-x-2 md:space-x-4 w-full md:w-auto">
           <div className="hidden md:flex">
-            <LiveFeedIndicator active={isPulseActive} />
+            <LiveFeedIndicator active={isPulseActive} compact={true} />
           </div>
 
           <button
@@ -255,7 +267,12 @@ function RiskRadarApp({ onLeaveApp }) {
       </header>
 
       {/* Main Panel Content */}
-      <main className="flex-grow p-4 md:p-6 max-w-7xl w-full mx-auto">
+      <main className="flex-grow p-4 md:p-6 max-w-7xl w-full mx-auto space-y-4">
+        {latestLiveReading && (
+          <div className="animate-fadeIn">
+            <LiveFeedIndicator active={isPulseActive} latestReading={latestLiveReading} />
+          </div>
+        )}
         {selectedAssetId ? (
           /* Detailed Assessment Card View */
           <AssetDetailPage

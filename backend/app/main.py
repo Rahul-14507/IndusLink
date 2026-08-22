@@ -145,6 +145,28 @@ def get_asset_detail(asset_id: str):
                     except Exception as explain_err:
                         logger.error(f"Error generating on-demand explanation for {norm_id}: {explain_err}")
             
+            # Attach latest sensor readings (with limits and timestamps) to latest_score
+            if latest_score:
+                cur.execute(
+                    """
+                    SELECT DISTINCT ON (metric) metric, value, safe_min, safe_max, ts
+                    FROM sensor_readings
+                    WHERE UPPER(asset_id) = %s
+                    ORDER BY metric, ts DESC
+                    """,
+                    (norm_id,)
+                )
+                readings = cur.fetchall()
+                latest_score["sensor_data"] = {
+                    r["metric"].lower(): {
+                        "value": float(r["value"]),
+                        "safe_min": float(r["safe_min"]) if r["safe_min"] is not None else None,
+                        "safe_max": float(r["safe_max"]) if r["safe_max"] is not None else None,
+                        "ts": r["ts"].isoformat()
+                    }
+                    for r in readings
+                }
+            
             # Pack response
             res = dict(equipment)
             res["latest_score"] = latest_score

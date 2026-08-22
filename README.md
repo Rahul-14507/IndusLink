@@ -366,6 +366,59 @@ Full interactive docs available at `http://127.0.0.1:8000/docs` when the backend
 
 ---
 
+## Live Wokwi IoT Demo
+
+RiskRadar includes a real-time IoT integration that receives live sensor readings from Wokwi virtual ESP32 hardware over MQTT.
+
+### MQTT Configuration
+- **Broker:** `broker.hivemq.com`
+- **Port:** `1883`
+- **Topic format:** `agrlink/<asset_id>/readings`
+- **Example topic:** `agrlink/agrlink-demo-001/readings`
+
+### Example Payload
+```json
+{
+  "temperature": 24.50,
+  "humidity": 65.00,
+  "pressure": 1012.34,
+  "raw_potentiometer": 2300
+}
+```
+
+### Setup & Running the Ingestion Stream
+1. **Start the Database:**
+   Ensure PostgreSQL is running on port `5432` (default configured via `docker-compose.yml` or manual environment).
+2. **Start the FastAPI Backend:**
+   ```powershell
+   $env:PYTHONPATH="."
+   uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
+   ```
+   *Note: At startup, the listener will automatically register the demo asset `AGRLINK-DEMO-001` in the database if it doesn't already exist.*
+3. **Start the Frontend:**
+   ```powershell
+   cd frontend
+   npm run dev
+   ```
+4. **Publish Simulated Telemetry:**
+   Run the mock publisher script to simulate ESP32 pushes:
+   ```powershell
+   $env:PYTHONPATH="."
+   python backend/scripts/simulate_wokwi.py agrlink-demo-001 24.5 65.0 1012.34 2300
+   ```
+5. **Verify Backend Ingestion Logs:**
+   The backend logs should output:
+   ```text
+   MQTT Ingestion: Received telemetry payload for AGRLINK-DEMO-001: {"temperature": 25.5, "humidity": 60.0...}
+   MQTT Ingested: AGRLINK-DEMO-001 -> temperature: 25.5 (Safe: 15.0 - 40.0)
+   MQTT Ingested: AGRLINK-DEMO-001 -> humidity: 60.0 (Safe: 30.0 - 80.0)
+   MQTT Ingested: AGRLINK-DEMO-001 -> pressure: 1010.2 (Safe: 950.0 - 1050.0)
+   Running risk scoring pipeline for asset: AGRLINK-DEMO-001
+   Scoring pipeline completed for AGRLINK-DEMO-001. Score: 32.5, Bucket: low
+   ```
+
+---
+
 ## License
 
 MIT

@@ -202,6 +202,59 @@ export default function AssetDetailPage({ assetId, assetDetail, history, onBack 
             )}
           </div>
 
+          {/* Real-time Telemetry Grid */}
+          {scoreRecord && scoreRecord.sensor_data && (
+            <div className="bg-surface border border-border rounded p-6 shadow-sm">
+              <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest border-b border-border pb-2 mb-4">
+                Real-Time Telemetry Feed
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {Object.entries(scoreRecord.sensor_data).map(([metric, data]) => {
+                  const val = parseFloat(data.value);
+                  const isMinBreach = data.safe_min !== null && val < data.safe_min;
+                  const isMaxBreach = data.safe_max !== null && val > data.safe_max;
+                  const isBreaching = isMinBreach || isMaxBreach;
+                  
+                  return (
+                    <div 
+                      key={metric} 
+                      className={`p-4 rounded border transition-colors ${
+                        isBreaching 
+                          ? "border-risk-high/30 bg-red-50/20" 
+                          : "border-border bg-background"
+                      }`}
+                    >
+                      <div className="flex justify-between items-start">
+                        <span className="text-[10px] font-bold text-ink-muted uppercase tracking-wider">{metric}</span>
+                        {isBreaching ? (
+                          <span className="px-1.5 py-0.5 bg-risk-high text-white text-[8px] font-bold uppercase rounded animate-pulse">
+                            Breach
+                          </span>
+                        ) : (
+                          <span className="px-1.5 py-0.5 bg-emerald-500 text-white text-[8px] font-bold uppercase rounded">
+                            Nominal
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-2xl font-black text-ink mt-2">
+                        {val.toFixed(metric === "pressure" ? 2 : 1)}
+                        <span className="text-xs font-semibold text-ink-muted ml-1">
+                          {metric === "temperature" ? "°C" : metric === "humidity" ? "%" : metric === "pressure" ? "hPa" : ""}
+                        </span>
+                      </div>
+                      <div className="text-[10px] text-ink-muted mt-2 font-medium">
+                        Safe: {data.safe_min !== null ? data.safe_min.toFixed(0) : "N/A"} - {data.safe_max !== null ? data.safe_max.toFixed(0) : "N/A"}
+                      </div>
+                      <div className="text-[9px] text-ink-muted/70 font-mono mt-1">
+                        Updated: {new Date(data.ts).toLocaleTimeString()}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Historical Trend Chart */}
           <div className="bg-surface border border-border rounded p-6 shadow-sm">
             <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest border-b border-border pb-2 mb-4">
