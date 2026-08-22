@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { ArrowLeft, Calendar, MapPin, Tag, Wrench, ShieldCheck, AlertCircle } from "lucide-react";
 import {
   LineChart,
@@ -19,6 +19,72 @@ export default function AssetDetailPage({ assetId, assetDetail, history, onBack 
   const scoreRecord = assetDetail.latest_score;
   const subScores = scoreRecord ? scoreRecord.sub_scores : {};
   const matchedScenarios = scoreRecord ? scoreRecord.matched_scenarios : [];
+
+  const [stimTemp, setStimTemp] = useState(25.0);
+  const [stimHum, setStimHum] = useState(60.0);
+  const [stimPress, setStimPress] = useState(1013.2);
+  const [isSending, setIsSending] = useState(false);
+  const [terminalLogs, setTerminalLogs] = useState([
+    "[SYS] Booting paired ESP32-S3 AirNode firmware v1.0.4...",
+    "[WIFI] Initializing ESP32 Wi-Fi hardware link...",
+    "[WIFI] Paired with local Gateway. SSID: Factory_Sensor_Secure",
+    "[MQTT] Connected to HiveMQ Broker @ broker.hivemq.com:1883",
+    `[MQTT] Pairing asset channel: agrlink/${assetId}/readings`,
+    "[MQTT] Telemetry streaming initialized successfully."
+  ]);
+
+  const terminalRef = useRef(null);
+
+  useEffect(() => {
+    if (scoreRecord && scoreRecord.sensor_data) {
+      const data = scoreRecord.sensor_data;
+      if (data.temperature) setStimTemp(parseFloat(data.temperature.value));
+      if (data.humidity) setStimHum(parseFloat(data.humidity.value));
+      if (data.pressure) setStimPress(parseFloat(data.pressure.value));
+    }
+  }, [scoreRecord]);
+
+  useEffect(() => {
+    if (terminalRef.current) {
+      terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
+    }
+  }, [terminalLogs]);
+
+  const logConsole = (msg) => {
+    const timestamp = new Date().toLocaleTimeString();
+    setTerminalLogs(prev => [...prev, `[${timestamp}] ${msg}`]);
+  };
+
+  const handleSendTelemetry = async () => {
+    setIsSending(true);
+    logConsole("[ENV] Triggering hardware override publish...");
+    logConsole(`[MQTT] Sending payload: {"temperature":${stimTemp.toFixed(2)},"humidity":${stimHum.toFixed(2)},"pressure":${stimPress.toFixed(2)}}`);
+    
+    try {
+      const res = await fetch("http://127.0.0.1:8000/api/ingest/telemetry", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          asset_id: assetId,
+          temperature: stimTemp,
+          humidity: stimHum,
+          pressure: stimPress
+        })
+      });
+      
+      const data = await res.json();
+      if (res.ok && data.status === "success") {
+        logConsole("[MQTT] Ingestion broadcast received. Recalculating safety score...");
+        logConsole("[SYS] Recalculation complete. WebSocket clients broadcasted.");
+      } else {
+        throw new Error(data.detail || "Payload ingestion rejected.");
+      }
+    } catch (err) {
+      logConsole(`[ERR] Failed to publish telemetry over broker: ${err.message}`);
+    } finally {
+      setIsSending(false);
+    }
+  };
 
   // Format history for line chart
   const chartData = history ? history.map(item => ({
@@ -307,6 +373,124 @@ export default function AssetDetailPage({ assetId, assetDetail, history, onBack 
                 No history data found for this equipment asset.
               </div>
             )}
+          </div>
+
+          {/* Virtual ESP32 IoT Node Console Panel */}
+          <div className="bg-surface border border-border rounded-xl p-6 shadow-sm space-y-4">
+            <div className="border-b border-border pb-3 flex items-center justify-between">
+              <div>
+                <h3 className="text-xs font-bold text-ink-muted uppercase tracking-widest">
+                  Virtual ESP32-S3 IoT Console
+                </h3>
+                <p className="text-[10px] text-ink-muted mt-0.5 font-mono">// MAC: 3C:61:05:44:A2:BC · Topic: agrlink/{assetId}/readings</p>
+              </div>
+              <span className="px-2.5 py-0.5 bg-emerald-50 border border-emerald-200 text-[8px] text-emerald-700 font-bold rounded-full uppercase tracking-wider animate-pulse flex items-center space-x-1 font-mono">
+                <span className="h-1.5 w-1.5 bg-emerald-500 rounded-full inline-block"></span>
+                <span>Paired & Live</span>
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Left Column: Environmental Stimulus Dials */}
+              <div className="space-y-4">
+                <h4 className="text-[10px] font-bold text-ink uppercase tracking-wider font-mono">Hardware Stimulus Adjusters</h4>
+                
+                {/* Temp Slider */}
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs font-mono">
+                    <span className="text-ink-muted">Thermal Heat Knob:</span>
+                    <span className="font-bold text-ink">{stimTemp.toFixed(1)}°C</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="5"
+                    max="95"
+                    step="0.5"
+                    value={stimTemp}
+                    onChange={(e) => {
+                      const v = parseFloat(e.target.value);
+                      setStimTemp(v);
+                      logConsole(`[ENV] Thermal knob adjusted to ${v.toFixed(1)}°C.`);
+                    }}
+                    className="w-full accent-primary bg-surface-muted h-1.5 rounded-lg border border-border"
+                  />
+                  <div className="flex justify-between text-[9px] text-ink-muted/70 font-mono">
+                    <span>Nominal Range: 15°C - 40°C</span>
+                  </div>
+                </div>
+
+                {/* Hum Slider */}
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs font-mono">
+                    <span className="text-ink-muted">Moisture Index Knob:</span>
+                    <span className="font-bold text-ink">{stimHum.toFixed(0)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="10"
+                    max="95"
+                    step="1"
+                    value={stimHum}
+                    onChange={(e) => {
+                      const v = parseFloat(e.target.value);
+                      setStimHum(v);
+                      logConsole(`[ENV] Moisture knob adjusted to ${v.toFixed(0)}%.`);
+                    }}
+                    className="w-full accent-primary bg-surface-muted h-1.5 rounded-lg border border-border"
+                  />
+                  <div className="flex justify-between text-[9px] text-ink-muted/70 font-mono">
+                    <span>Nominal Range: 30% - 80%</span>
+                  </div>
+                </div>
+
+                {/* Press Slider */}
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs font-mono">
+                    <span className="text-ink-muted">Compressor Pressure Valve:</span>
+                    <span className="font-bold text-ink">{stimPress.toFixed(1)} hPa</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="900"
+                    max="1180"
+                    step="1"
+                    value={stimPress}
+                    onChange={(e) => {
+                      const v = parseFloat(e.target.value);
+                      setStimPress(v);
+                      logConsole(`[ENV] Pressure valve set to ${v.toFixed(1)} hPa.`);
+                    }}
+                    className="w-full accent-primary bg-surface-muted h-1.5 rounded-lg border border-border"
+                  />
+                  <div className="flex justify-between text-[9px] text-ink-muted/70 font-mono">
+                    <span>Nominal Range: 950 - 1050 hPa</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleSendTelemetry}
+                  disabled={isSending}
+                  className="w-full py-2 bg-primary hover:bg-[#15291D] disabled:bg-primary/40 text-white text-[10px] font-bold font-mono uppercase tracking-wider rounded-full transition-all shadow-sm"
+                >
+                  {isSending ? "Publishing Ingestion Packet..." : "Publish Telemetry Override"}
+                </button>
+              </div>
+
+              {/* Right Column: Serial Monitor Terminal Logs */}
+              <div className="space-y-2">
+                <h4 className="text-[10px] font-bold text-ink uppercase tracking-wider font-mono">Serial Monitor Log</h4>
+                <div 
+                  ref={terminalRef}
+                  className="bg-[#1D3225] text-[#10B981] font-mono text-[9px] p-3 rounded-lg border border-border/10 shadow-inner h-44 overflow-y-auto space-y-1 scrollbar-none"
+                >
+                  {terminalLogs.map((l, i) => (
+                    <div key={i} className="leading-relaxed animate-fadeIn">
+                      {l}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

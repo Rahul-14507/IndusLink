@@ -39,3 +39,19 @@ html.lenis, html.lenis body {
 .lenis-smooth iframe {
   pointer-events: none;
 }
+
+@keyframes fadeInSlide {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-page-change {
+  animation: fadeInSlide 0.35s cubic-bezier(0.215, 0.610, 0.355, 1.000) forwards;
+}
+
