@@ -6,7 +6,7 @@ import {
   useMutation,
   useQueryClient
 } from "@tanstack/react-query";
-import { ShieldAlert, BarChart3, Database, Play, Activity } from "lucide-react";
+import { ShieldAlert, BarChart3, Database, Play, Activity, Upload } from "lucide-react";
 
 // Components
 import RiskQueueTable from "./components/RiskQueueTable";
@@ -16,6 +16,7 @@ import AuditLogTable from "./components/AuditLogTable";
 import DashboardTrends from "./components/DashboardTrends";
 import LiveFeedIndicator from "./components/LiveFeedIndicator";
 import LandingPage from "./components/LandingPage";
+import ImportModal from "./components/ImportModal";
 
 // API Base URL
 const API_BASE = "http://127.0.0.1:8000";
@@ -34,6 +35,7 @@ function RiskRadarApp({ onLeaveApp }) {
   const [selectedAssetId, setSelectedAssetId] = useState(null);
   const [auditAssetFilter, setAuditAssetFilter] = useState("");
   const [isPulseActive, setIsPulseActive] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
 
   const qc = useQueryClient();
 
@@ -228,10 +230,18 @@ function RiskRadarApp({ onLeaveApp }) {
         )}
 
         {/* Live Indicator & Admin Controls */}
-        <div className="flex items-center justify-between md:justify-end space-x-4 w-full md:w-auto">
+        <div className="flex items-center justify-between md:justify-end space-x-2 md:space-x-4 w-full md:w-auto">
           <div className="hidden md:flex">
             <LiveFeedIndicator active={isPulseActive} />
           </div>
+
+          <button
+            onClick={() => setIsImportOpen(true)}
+            className="flex-grow md:flex-grow-0 flex items-center justify-center space-x-1.5 px-3 py-2 md:py-1.5 bg-surface hover:bg-surface-muted border border-border text-ink-muted hover:text-ink text-[10px] md:text-xs font-bold uppercase tracking-wider rounded transition-colors shadow-sm"
+          >
+            <Upload className="h-3.5 w-3.5" />
+            <span>Import CSV</span>
+          </button>
           
           <button
             onClick={() => runScoringBatch.mutate()}
@@ -321,6 +331,23 @@ function RiskRadarApp({ onLeaveApp }) {
       <footer className="bg-surface border-t border-border py-4 px-6 text-center text-xs text-ink-muted">
         RiskRadar Safety Predictive-Safety Platform &copy; 2026. All rights reserved.
       </footer>
+
+      {/* CSV Ingestion Dialog Modal */}
+      <ImportModal
+        isOpen={isImportOpen}
+        onClose={() => setIsImportOpen(false)}
+        onIngestSuccess={() => {
+          qc.invalidateQueries(["risk-queue"]);
+          qc.invalidateQueries(["early-warnings"]);
+          qc.invalidateQueries(["dashboard-trends"]);
+          qc.invalidateQueries(["audit-logs"]);
+          if (selectedAssetId) {
+            qc.invalidateQueries(["asset-detail", selectedAssetId]);
+            qc.invalidateQueries(["asset-history", selectedAssetId]);
+          }
+        }}
+        apiBase={API_BASE}
+      />
     </div>
   );
 }

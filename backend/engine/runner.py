@@ -77,14 +77,8 @@ def run_scoring_pipeline(asset_id: str, run_date: datetime.date = None) -> dict 
             "matched_scenarios": matched_scenarios
         }
         
-        # 6. LLM prose explanation via Groq API (fallback to None if it fails)
-        explanation_text = get_explanation(
-            asset=equipment,
-            sub_scores=sub_scores,
-            matched_scenarios=matched_scenarios,
-            bucket=bucket,
-            action=action
-        )
+        # 6. Skip LLM prose explanation during pipeline run (will be generated on-demand)
+        explanation_text = None
         
         # 7. Write to risk_scores audit table
         run_at = datetime.datetime.now(datetime.timezone.utc)
