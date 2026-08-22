@@ -1,4 +1,7 @@
-import React from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import AccordionGallery from "./AccordionGallery";
+import FoldText from "./FoldText";
+import GlareHover from "./GlareHover";
 import {
   ShieldAlert,
   ArrowRight,
@@ -13,11 +16,72 @@ import {
   Play,
   FileText,
   AlertTriangle,
-  ExternalLink
+  ExternalLink,
+  ChevronDown,
+  Info
 } from "lucide-react";
 
 export default function LandingPage({ onEnterApp }) {
-  // Navigation helper for smooth scrolling
+  const [logs, setLogs] = useState([
+    { type: "SYSTEM", text: "Initializing telemetry ingestion socket...", color: "text-zinc-400", time: "20:24:01" },
+    { type: "SYSTEM", text: "Connecting to MQTT Broker: broker.hivemq.com", color: "text-zinc-400", time: "20:24:03" },
+    { type: "SYSTEM", text: "Ingestion active. Monitoring 5 dimensions...", color: "text-emerald-500", time: "20:24:05" }
+  ]);
+  const [isPaused, setIsPaused] = useState(false);
+  const [logIndex, setLogIndex] = useState(0);
+  const terminalContainerRef = useRef(null);
+
+  const logTemplates = useMemo(() => [
+    { type: "VIBRATION", text: "PUMP-014: 2.1 mm/s - Vibration within tolerance", color: "text-[#8CA094]" },
+    { type: "PRESSURE", text: "BOILER-01: 72.4 psi - Nominal pressure", color: "text-[#8CA094]" },
+    { type: "TEMPERATURE", text: "TURBINE-08: 142.6°F - Steady state", color: "text-[#8CA094]" },
+    { type: "MAINTENANCE", text: "VALVE-09: Scheduled lubrication complete", color: "text-emerald-400/80" },
+    { type: "SYSTEM", text: "Audit log sync: 0 anomalies detected in past 24h", color: "text-zinc-400" },
+    { type: "VIBRATION", text: "PUMP-014: 4.2 mm/s - Drift detected (Threshold: 4.0)", color: "text-amber-400 font-medium" },
+    { type: "INDUSLINK", text: ">>> [FLAGGED] PUMP-014: Score elevated to 54 (WARN) - Drift detected", color: "text-amber-400 font-semibold" },
+    { type: "PRESSURE", text: "COMPRESSOR-02: 84.1 psi - Nominal pressure", color: "text-[#8CA094]" },
+    { type: "MAINTENANCE", text: "COMPRESSOR-02: Next PM schedule overdue by 124 days", color: "text-amber-405" },
+    { type: "INDUSLINK", text: ">>> [FLAGGED] COMPRESSOR-02: Score elevated to 72 (HIGH) - Overdue maintenance", color: "text-red-400 font-semibold" },
+    { type: "INDUSLINK", text: ">>> [RECOMMENDATION] Dispatch mechanical check for COMPRESSOR-02", color: "text-emerald-400 font-semibold" },
+    { type: "INSPECTION", text: "VALVE-09: Seal integrity marked as 'degraded' in report", color: "text-amber-400" },
+    { type: "SYSTEM", text: "Cleared queue: 14 telemetry packets processed", color: "text-zinc-400" }
+  ], []);
+
+  useEffect(() => {
+    if (isPaused) return;
+    const interval = setInterval(() => {
+      setLogs((prev) => {
+        const nextLog = logTemplates[logIndex % logTemplates.length];
+        const now = new Date();
+        const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+        return [...prev, { ...nextLog, time: timeStr }].slice(-20);
+      });
+      setLogIndex((prev) => prev + 1);
+    }, 2800);
+
+    return () => clearInterval(interval);
+  }, [isPaused, logIndex, logTemplates]);
+
+  useEffect(() => {
+    if (terminalContainerRef.current) {
+      terminalContainerRef.current.scrollTop = terminalContainerRef.current.scrollHeight;
+    }
+  }, [logs]);
+
+  const handleInjectFailure = () => {
+    const now = new Date();
+    const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+    const injected = [
+      { type: "INJECT", text: "[USER_INJECT] Triggered cooling loop blockage sequence...", color: "text-purple-400 font-bold", time: timeStr },
+      { type: "TEMPERATURE", text: "BOILER-01: 298.4°F - EXTREME HEAT EXCURSION", color: "text-red-500 font-bold", time: timeStr },
+      { type: "PRESSURE", text: "BOILER-01: 119.5 psi - Limit exceeded", color: "text-red-500 font-bold", time: timeStr },
+      { type: "INDUSLINK", text: ">>> [CRITICAL ALERT] BOILER-01: Score 92 (EMERGENCY) - Thermal runaway threat", color: "text-red-400 font-black tracking-wide", time: timeStr },
+      { type: "INDUSLINK", text: ">>> [RECOMMENDATION] EMERGENCY DISPATCH: Actuate manual steam vent release valve.", color: "text-emerald-400 font-black", time: timeStr }
+    ];
+    setLogs((prev) => [...prev, ...injected].slice(-20));
+  };
+
+  // Helper for smooth scrolling
   const scrollToSection = (id) => {
     const element = document.getElementById(id);
     if (element) {
@@ -26,527 +90,807 @@ export default function LandingPage({ onEnterApp }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#080B0D] text-zinc-100 font-mono antialiased relative selection:bg-accent selection:text-white">
-      {/* Decorative Grid Overlay for Industrial Vibe */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#0f1418_1px,transparent_1px),linear-gradient(to_bottom,#0f1418_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
+    <div className="min-h-screen bg-[#FAF8F5] text-[#1D2A22] font-sans antialiased relative overflow-hidden selection:bg-[#1D3225] selection:text-white">
+      
+      {/* Muted green ambient lights for inviting look */}
+      <div className="absolute top-[-10%] left-[50%] -translate-x-1/2 w-[900px] h-[350px] bg-emerald-500/5 rounded-full blur-[130px] pointer-events-none" />
+      <div className="absolute top-[35%] right-[5%] w-[400px] h-[400px] bg-amber-500/5 rounded-full blur-[120px] pointer-events-none" />
 
-      {/* Top Banner & Navigation */}
-      <header className="sticky top-0 z-50 bg-[#080B0D]/90 backdrop-blur-md border-b border-zinc-800 px-6 py-4 flex items-center justify-between">
+      {/* Top Header Navigation */}
+      <header className="sticky top-0 z-50 bg-[#FAF8F5]/95 backdrop-blur-md border-b border-[#E3DFD5] px-6 py-4 flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="bg-red-950/50 border border-red-800 p-1.5 animate-pulse">
-            <ShieldAlert className="h-5 w-5 text-red-500" />
+          <div className="bg-[#1D3225]/5 border border-[#1D3225]/20 p-2 rounded-sm shadow-sm">
+            <ShieldAlert className="h-5 w-5 text-[#1D3225]" />
           </div>
           <div>
-            <h1 className="text-base font-black tracking-widest text-zinc-100 uppercase">INDUSLINK</h1>
-            <p className="text-[10px] text-zinc-500 tracking-wider font-sans -mt-0.5">PREDICTIVE SAFETY CONSOLE</p>
+            <h1 className="text-base font-black tracking-widest text-[#1D3225] font-mono">INDUSLINK</h1>
+            <p className="text-[10px] text-zinc-500 tracking-widest font-mono -mt-1">PREDICTIVE SAFETY CONSOLE</p>
           </div>
         </div>
 
-        <nav className="hidden md:flex items-center space-x-6 text-xs text-zinc-400 font-sans font-medium">
-          <button onClick={() => scrollToSection("core-loop")} className="hover:text-zinc-100 transition-colors uppercase tracking-wider">Pipeline</button>
-          <button onClick={() => scrollToSection("differentiators")} className="hover:text-zinc-100 transition-colors uppercase tracking-wider">Differentiators</button>
-          <button onClick={() => scrollToSection("demo")} className="hover:text-zinc-100 transition-colors uppercase tracking-wider">Demo</button>
-          <button onClick={() => scrollToSection("architecture")} className="hover:text-zinc-100 transition-colors uppercase tracking-wider">Architecture</button>
-          <button onClick={() => scrollToSection("iot")} className="hover:text-zinc-100 transition-colors uppercase tracking-wider">IoT-Sim</button>
+        <nav className="hidden lg:flex items-center space-x-8 text-xs font-mono uppercase tracking-wider text-[#3B4C41]">
+          <button onClick={() => scrollToSection("problem")} className="hover:text-[#1D3225] transition-colors">The Gap</button>
+          <button onClick={() => scrollToSection("shift")} className="hover:text-[#1D3225] transition-colors">The Shift</button>
+          <button onClick={() => scrollToSection("core-loop")} className="hover:text-[#1D3225] transition-colors">The Loop</button>
+          <button onClick={() => scrollToSection("differentiators")} className="hover:text-[#1D3225] transition-colors">Differences</button>
+          <button onClick={() => scrollToSection("demo")} className="hover:text-[#1D3225] transition-colors">Live Preview</button>
+          <button onClick={() => scrollToSection("architecture")} className="hover:text-[#1D3225] transition-colors">Architecture</button>
         </nav>
 
         <div className="flex items-center space-x-4">
-          <div className="hidden sm:flex items-center space-x-2 border border-emerald-900/40 bg-emerald-950/10 px-2.5 py-1 text-[10px] text-emerald-500 uppercase tracking-widest">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-            <span>SYS_READY // SECURE</span>
-          </div>
           <button
             onClick={onEnterApp}
-            className="flex items-center space-x-2 px-4 py-1.5 bg-accent hover:bg-accent/90 text-white text-xs font-bold uppercase tracking-widest border border-amber-500 transition-colors hover:shadow-[0_0_15px_rgba(232,135,30,0.3)]"
+            className="flex items-center space-x-2 px-5 py-2.5 bg-[#1D3225] hover:bg-[#15291D] text-white text-xs font-bold font-mono uppercase tracking-wider transition-all hover:shadow-[0_4px_14px_rgba(29,50,37,0.15)] rounded-lg"
           >
             <span>LAUNCH CONSOLE</span>
-            <ArrowRight className="h-3.5 w-3.5" />
+            <ArrowRight className="h-4 w-4" />
           </button>
         </div>
       </header>
 
-      {/* 1. Hero Section */}
-      <section className="relative pt-24 pb-20 px-6 max-w-7xl mx-auto border-x border-zinc-900">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          <div className="lg:col-span-8 space-y-6">
-            <div className="inline-flex items-center space-x-2 border border-zinc-800 bg-zinc-900/50 px-3 py-1 text-[11px] text-zinc-400 uppercase tracking-widest">
-              <span className="text-accent">//</span>
-              <span>HACKATHON DEPLOYMENT &bull; EXPLAINABLE AI</span>
+      {/* 1. Hero Section with Large Rounded Curves and Forest Green Simulator Card */}
+      <section className="relative pt-20 pb-28 px-6 bg-[#F6F4EE] rounded-b-[3.5rem] border-b border-[#E3DFD5] shadow-sm bg-grid-warm">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          
+          {/* Left Hero Texts */}
+          <div className="lg:col-span-7 space-y-6">
+            <div className="inline-flex items-center space-x-2 border border-[#E3DFD5] bg-[#EFECE6]/40 px-3 py-1 rounded-full text-[11px] text-[#3B4C41] font-mono tracking-wider">
+              <span className="text-emerald-600 font-bold">&bull;</span>
+              <span className="uppercase text-[9px]">AI-Powered Industrial Safety</span>
             </div>
             
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tighter text-white uppercase leading-none">
-              Safety Checks Today <br/>
-              Are <span className="text-red-500 underline decoration-red-950 underline-offset-8">Reactive</span>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-[#1D3225] leading-[1.05] uppercase">
+              <FoldText
+                text="Most industrial accidents don't happen without warning."
+                splitBy="word"
+                fontSize="inherit"
+                fontWeight="inherit"
+                color="#1D3225"
+                trigger="mount"
+                duration={1.2}
+                stagger={0.08}
+              />
+              <br />
+              <span className="text-[#C0392B]">They happen without anyone listening.</span>
             </h1>
 
-            <p className="text-zinc-400 text-sm sm:text-base font-sans leading-relaxed max-w-2xl">
-              Periodic manual inspections and reviewing log records <span className="text-zinc-200 font-semibold font-mono text-xs bg-zinc-900 px-1 border border-zinc-800">POST-INCIDENT</span> fail to protect workers. 
-              IndusLink shifts the paradigm by continuously feeding historical audits, maintenance logs, and sensor streams into a deterministic evaluation engine to preempt failures before they occur.
+            <p className="text-[#3B4C41] text-sm sm:text-lg leading-relaxed max-w-2xl font-sans">
+              Overdue maintenance. A pressure reading drifting off-range. A failure that got patched but never root-caused. The warning signs are almost always sitting in the records — scattered across logs no one has time to cross-reference until after something goes wrong. <strong className="text-[#1D3225] font-semibold">IndusLink reads them first.</strong>
             </p>
 
-            <div className="p-4 border-l-2 border-accent bg-amber-950/10 border-y border-r border-amber-900/20 max-w-3xl">
-              <p className="text-xs text-zinc-300 font-sans italic leading-relaxed">
-                "RiskRadar flags critical industrial assets showing signs of silent degradation, translates mathematical risks into clear human-understandable recommendations, and ranks issues by risk severity."
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-4 pt-4">
+            <div className="flex flex-wrap gap-4 pt-2">
               <button
-                onClick={onEnterApp}
-                className="px-6 py-3 bg-accent hover:bg-accent/90 text-white text-xs font-bold uppercase tracking-widest border border-amber-500 transition-colors flex items-center space-x-2"
+                onClick={() => scrollToSection("demo")}
+                className="px-6 py-3.5 bg-[#1D3225] hover:bg-[#15291D] text-white text-xs font-bold font-mono uppercase tracking-widest transition-all flex items-center space-x-2 hover:shadow-[0_4px_14px_rgba(29,50,37,0.2)] rounded-lg"
               >
-                <span>ENTER THE CONTROL ROOM</span>
+                <span>SEE HOW IT WORKS</span>
                 <ChevronRight className="h-4 w-4" />
               </button>
               <button
-                onClick={() => scrollToSection("core-loop")}
-                className="px-6 py-3 border border-zinc-800 hover:border-zinc-700 bg-zinc-900/30 text-zinc-300 hover:text-zinc-100 text-xs font-bold uppercase tracking-widest transition-colors"
+                onClick={() => scrollToSection("architecture")}
+                className="px-6 py-3.5 border border-[#E3DFD5] hover:border-[#1D3225] bg-transparent text-[#3B4C41] hover:text-[#1D3225] text-xs font-bold font-mono uppercase tracking-widest transition-all rounded-lg"
               >
-                SEE PIPELINE FLOW
+                VIEW THE ARCHITECTURE
               </button>
             </div>
           </div>
 
-          {/* Right Column: Console Graphic Mockup */}
-          <div className="lg:col-span-4 border border-zinc-800 bg-zinc-950/60 p-6 space-y-4 shadow-xl relative overflow-hidden">
-            {/* Top diagnostic line */}
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-3 text-[10px] text-zinc-500">
-              <span>DEVICE_CHECK: OK</span>
-              <span className="font-mono text-red-500">CRITICAL_BLOCKED: 03</span>
+          {/* Right Hero: Live Telemetry Logger Terminal wrapped in GlareHover */}
+          <div className="lg:col-span-5 shadow-2xl">
+            <GlareHover
+              glareColor="#ffffff"
+              glareOpacity={0.15}
+              glareAngle={-30}
+              glareSize={220}
+              borderRadius="16px"
+              background="#13261C"
+              borderColor="#274433"
+              height="400px"
+              className="p-5 text-zinc-150 relative overflow-hidden flex flex-col h-[400px]"
+            >
+              {/* Card Header */}
+              <div className="border-b border-[#274433] pb-3 mb-3 flex items-center justify-between">
+                <div>
+                  <h3 className="text-xs font-bold font-mono text-white uppercase tracking-wider">Live Ingest Monitor</h3>
+                  <p className="text-[9px] text-zinc-400 font-sans mt-0.5">Correlating multi-dimensional safety data streams</p>
+                </div>
+                <div className="flex items-center space-x-1.5 bg-[#0D1912] border border-[#274433] px-2.5 py-1 rounded-full">
+                  <span className={`h-1.5 w-1.5 rounded-full ${isPaused ? 'bg-amber-500' : 'bg-emerald-500 animate-pulse'}`} />
+                  <span className="text-[9px] font-mono text-zinc-300 font-bold uppercase tracking-wider">
+                    {isPaused ? 'PAUSED' : 'STREAMING'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Terminal Logs Area */}
+              <div ref={terminalContainerRef} className="flex-grow bg-[#0D1912] border border-[#274433] rounded-lg p-3 overflow-y-auto font-mono text-[10px] space-y-1.5 scrollbar-none">
+                {logs.map((log, index) => (
+                  <div key={index} className="leading-relaxed break-words">
+                    <span className="text-zinc-550 mr-1.5">[{log.time}]</span>
+                    <span className="px-1 py-0.5 bg-[#13261C] border border-[#274433] text-zinc-300 rounded text-[8px] mr-1.5 font-bold uppercase select-none tracking-wide">
+                      {log.type}
+                    </span>
+                    <span className={log.color}>{log.text}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Terminal Controls */}
+              <div className="mt-3 grid grid-cols-3 gap-2 text-center text-[9px] font-mono font-bold uppercase">
+                <button
+                  onClick={() => setIsPaused(!isPaused)}
+                  className="py-2.5 border border-[#274433] hover:border-zinc-500 hover:text-white bg-[#1A3226] text-zinc-300 rounded-lg transition-colors"
+                >
+                  {isPaused ? 'RESUME FEED' : 'PAUSE FEED'}
+                </button>
+                <button
+                  onClick={() => setLogs([])}
+                  className="py-2.5 border border-[#274433] hover:border-zinc-500 hover:text-white bg-[#1A3226] text-zinc-300 rounded-lg transition-colors"
+                >
+                  CLEAR
+                </button>
+                <button
+                  onClick={handleInjectFailure}
+                  className="py-2.5 border border-purple-800 hover:border-purple-500 bg-[#25132A] text-purple-200 hover:text-white rounded-lg transition-colors"
+                >
+                  INJECT ERROR
+                </button>
+              </div>
+            </GlareHover>
+          </div>
+
+        </div>
+      </section>
+
+      {/* 2. The Problem (Narrative section) */}
+      <section id="problem" className="py-24 bg-[#FAF8F5] px-6 max-w-7xl mx-auto border-x border-[#E3DFD5]/70 bg-grid-warm">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+          
+          {/* Left Column: Narrative Copy */}
+          <div className="lg:col-span-7 space-y-6">
+            <div className="text-xs font-mono text-[#3B4C41] tracking-widest uppercase">// THE GAP</div>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#1D3225] tracking-tight leading-snug">
+              <FoldText
+                text="Safety today is a postmortem, not a forecast."
+                splitBy="word"
+                fontSize="inherit"
+                fontWeight="inherit"
+                color="#1D3225"
+                trigger="scroll"
+                duration={1.2}
+                stagger={0.08}
+              />
+            </h2>
+            <div className="text-[#3B4C41] text-sm sm:text-base leading-relaxed space-y-4 font-sans">
+              <p>
+                Walk into most industrial safety operations and you'll find the same pattern: inspections happen on a calendar, not on risk. Maintenance records, sensor logs, and audit reports pile up in separate systems that rarely talk to each other.
+              </p>
+              <p>
+                And when something does fail, the investigation that follows almost always turns up the same thing — <strong>the signs were there</strong>. A maintenance interval that kept slipping. A sensor that had been trending toward its limit for weeks. A failure that repeated because the fix addressed the symptom, not the cause.
+              </p>
+              <p>
+                This isn't a data problem. The data usually exists. It's a <strong>synthesis problem</strong> — nobody has the time to read every log against every other log for every asset, every day. So the review only happens after the accident, when it's too late to matter.
+              </p>
+            </div>
+          </div>
+
+          {/* Right Column: Visual Safety Pyramid Accent */}
+          <div className="lg:col-span-5 bg-[#F6F4EE] border border-[#E3DFD5] p-6 rounded-2xl shadow-sm relative">
+            <h3 className="text-xs font-mono text-[#3B4C41] uppercase tracking-wider">// The Safety-Pyramid Principle</h3>
+            
+            {/* SVG Visual Representation of Safety Pyramid */}
+            <div className="relative flex justify-center py-6">
+              <svg width="220" height="160" viewBox="0 0 220 160" className="overflow-visible">
+                {/* 1 Major Accident */}
+                <polygon points="110,10 135,50 85,50" className="fill-red-500/10 stroke-red-500" strokeWidth="1.5" />
+                {/* 30 Minor Incidents */}
+                <polygon points="135,50 165,100 55,100 85,50" className="fill-amber-500/10 stroke-amber-500/50" strokeWidth="1.5" />
+                {/* 300 Near Misses / Weak Signals */}
+                <polygon points="165,100 195,150 25,150 55,100" className="fill-[#FAF8F5] stroke-[#E3DFD5]" strokeWidth="1.5" />
+                
+                {/* Labels */}
+                <text x="110" y="38" className="fill-red-600 text-[10px] font-mono text-center font-bold" textAnchor="middle">1 ACCIDENT</text>
+                <text x="110" y="82" className="fill-amber-600 text-[9px] font-mono text-center" textAnchor="middle">30 MINOR EVENTS</text>
+                <text x="110" y="132" className="fill-[#3B4C41] text-[9px] font-mono text-center" textAnchor="middle">300 UNTRACKED SIGNALS</text>
+              </svg>
             </div>
 
-            <div className="space-y-3">
-              <div className="flex justify-between items-center bg-zinc-900/60 p-2 border border-zinc-850">
-                <span className="text-xs text-zinc-400">PUMP-014 (Pressure)</span>
-                <span className="px-2 py-0.5 bg-red-950 border border-red-800 text-[10px] text-red-400 font-bold uppercase tracking-wide">HIGH_RISK</span>
+            <div className="p-4 border-l-2 border-red-500 bg-[#C0392B]/5 text-xs text-[#3B4C41] font-sans leading-relaxed italic rounded-r-lg">
+              "Industrial safety has long recognized that serious accidents are preceded by far more near-misses and minor incidents than anyone tracks in real time. The evidence is almost always there before the event. The problem has never been the absence of warning signs. It's the absence of someone connecting them in time."
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* 3. The Shift (turn / solution intro) */}
+      <section id="shift" className="py-24 bg-[#F6F4EE] border-t border-[#E3DFD5] px-6 bg-grid-warm">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          
+          {/* Left Visual Status Board */}
+          <div className="lg:col-span-5 border border-[#E3DFD5] bg-[#FAF8F5] p-6 space-y-4 shadow-sm rounded-2xl">
+            <div className="flex justify-between items-center text-[10px] font-mono text-zinc-500 border-b border-[#E3DFD5]/80 pb-2">
+              <span>DAEMON_CHECK: ACTIVE</span>
+              <span>SYNCHRONIZER_STATUS</span>
+            </div>
+            
+            <div className="space-y-2">
+              <div className="bg-[#FAF8F5] p-3 border border-[#E3DFD5] flex justify-between items-center text-xs font-mono rounded-lg">
+                <span className="text-[#3B4C41]">MAINTENANCE_INTERVALS</span>
+                <span className="text-emerald-600 font-bold">SYNCHRONIZED</span>
               </div>
-              <div className="flex justify-between items-center bg-zinc-900/60 p-2 border border-zinc-850">
-                <span className="text-xs text-zinc-400">TURBINE-08 (Vibration)</span>
-                <span className="px-2 py-0.5 bg-amber-950 border border-amber-800 text-[10px] text-amber-400 font-bold uppercase tracking-wide">WARN_RISK</span>
+              <div className="bg-[#FAF8F5] p-3 border border-[#E3DFD5] flex justify-between items-center text-xs font-mono rounded-lg">
+                <span className="text-[#3B4C41]">SENSOR_DRIFT_METRICS</span>
+                <span className="text-emerald-600 font-bold">SYNCHRONIZED</span>
               </div>
-              <div className="flex justify-between items-center bg-zinc-900/60 p-2 border border-zinc-850">
-                <span className="text-xs text-zinc-400">COMPRESSOR-02 (Temp)</span>
-                <span className="px-2 py-0.5 bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-500 font-bold uppercase tracking-wide">OK</span>
+              <div className="bg-[#FAF8F5] p-3 border border-[#E3DFD5] flex justify-between items-center text-xs font-mono rounded-lg">
+                <span className="text-[#3B4C41]">INSPECTOR_REPORTS</span>
+                <span className="text-emerald-600 font-bold">SYNCHRONIZED</span>
               </div>
             </div>
 
-            <div className="bg-zinc-900/30 p-3 border border-zinc-850 space-y-2">
-              <div className="flex items-center justify-between text-[10px] text-zinc-500">
-                <span>SCENARIO IDENTIFIED:</span>
-                <span className="text-amber-500">SILENT_DEGRADATION</span>
-              </div>
-              <div className="w-full bg-zinc-900 h-2 border border-zinc-800">
-                <div className="bg-gradient-to-r from-amber-500 to-red-500 h-full w-[85%]" />
-              </div>
+            <div className="text-[10px] text-zinc-400 font-mono text-center">
+              &bull; CONTINUOUS SCANNING SYSTEM OPERATIONAL &bull;
             </div>
+          </div>
 
-            {/* Bottom mini-terminal feed */}
-            <div className="bg-black/80 border border-zinc-900 p-3 font-mono text-[9px] text-emerald-500 space-y-1 overflow-hidden h-28 select-none">
-              <p className="text-zinc-500">&gt; npm run start:broker</p>
-              <p>[sys] mqtt sub connected to riskradar/#</p>
-              <p>[sys] payload rx: {"{"}PUMP-014: 82.4 psi{"}"}</p>
-              <p className="text-amber-400">[eval] running scenario matcher...</p>
-              <p className="text-red-400">[alarm] PUMP-014 score jumped +14% (High Risk)</p>
-              <p className="text-emerald-400 animate-pulse">&gt; waiting telemetry feed...</p>
+          {/* Right Text Description */}
+          <div className="lg:col-span-7 space-y-6">
+            <div className="text-xs font-mono text-[#3B4C41] tracking-widest uppercase">// THE SHIFT</div>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#1D3225] tracking-tight leading-snug">
+              What if the cross-referencing just... happened. Continuously.
+            </h2>
+            <div className="text-[#3B4C41] text-sm sm:text-base leading-relaxed space-y-4 font-sans">
+              <p>
+                IndusLink sits underneath your existing maintenance logs, inspection reports, incident history, and sensor feeds — historical or live — and does the correlation work no one has time to do by hand.
+              </p>
+              <p>
+                It doesn't wait for a scheduled audit. It watches continuously, flags what's drifting toward dangerous before it gets there, and tells you exactly why, in plain language an inspector can act on immediately.
+              </p>
             </div>
+            <div className="p-4 border border-[#E3DFD5] bg-[#FAF8F5] font-mono text-xs space-y-1 text-[#3B4C41] rounded-xl shadow-inner">
+              <span className="text-[#E8871E] font-black">Not a red dot on a dashboard.</span>
+              <p className="font-sans text-zinc-500 text-xs mt-1">A reason. A recommendation. A rank telling you which one to walk to first.</p>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* Accordion Gallery Showcase (off-white card frame with dark green inside) */}
+      <section className="py-20 bg-[#FAF8F5] border-t border-[#E3DFD5] px-6 max-w-7xl mx-auto border-x border-[#E3DFD5]/70 bg-grid-warm">
+        <div className="space-y-10">
+          <div className="text-center space-y-3">
+            <span className="text-xs text-accent uppercase tracking-widest font-mono font-bold">// CONVERGED DIMENSIONS</span>
+            <h2 className="text-3xl font-extrabold text-[#1D3225] tracking-tight">The Telemetry Dimensions We Monitor</h2>
+            <p className="text-[#3B4C41] text-sm max-w-lg mx-auto font-sans">
+              Hover over each dimension to expand its visual focus and discover how IndusLink aggregates disparate datasets.
+            </p>
+          </div>
+          <div className="border border-[#E3DFD5] bg-[#F6F4EE]/50 p-6 rounded-3xl shadow-sm">
+            <AccordionGallery
+              defaultIndex={2}
+              expandRatio={0.55}
+              trigger="hover"
+              accentColor="#1D3225"
+              overlayColor="#13261C"
+              textColor="#ffffff"
+              grayscale={true}
+              showLabels={true}
+              duration={0.6}
+              ease="power3.out"
+              parallax={0.4}
+              tilt={6}
+              stagger={0.05}
+              height={380}
+              gap={12}
+              radius={20}
+              orientation="horizontal"
+            />
           </div>
         </div>
       </section>
 
-      {/* 2. Core Loop Diagram Section */}
-      <section id="core-loop" className="py-20 border-t border-zinc-900 bg-[#06080A] px-6">
-        <div className="max-w-7xl mx-auto space-y-12">
+      {/* 4. How It Works (The Core Loop) */}
+      <section id="core-loop" className="py-24 border-t border-[#E3DFD5] bg-[#F6F4EE] px-6 bg-grid-warm">
+        <div className="max-w-7xl mx-auto space-y-16">
           <div className="text-center max-w-2xl mx-auto space-y-3">
-            <span className="text-xs text-accent uppercase tracking-widest font-bold">// OPERATIONS PIPELINE</span>
-            <h2 className="text-2xl sm:text-3xl font-bold text-white uppercase tracking-tight">The Core Data Loop</h2>
-            <p className="text-zinc-400 text-xs sm:text-sm font-sans">
-              Unlike generic anomaly models, IndusLink passes structured, deterministic scores through an LLM to generate verifiable audits and ranks action paths.
+            <span className="text-xs text-accent uppercase tracking-widest font-mono font-bold">// THE LOOP</span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#1D3225] tracking-tight">The Correlation Engine</h2>
+            <p className="text-[#3B4C41] text-sm font-sans">
+              From raw records to a ranked action list — automatically.
             </p>
           </div>
 
-          {/* Horizontal Steps (Vertical on mobile) */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 relative">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            
             {/* Step 1 */}
-            <div className="border border-zinc-800 bg-zinc-900/20 p-5 space-y-3 relative group">
-              <div className="absolute top-3 right-3 text-xs text-zinc-700 font-black">01</div>
-              <div className="bg-zinc-900 p-2 inline-block border border-zinc-800 text-zinc-400">
+            <GlareHover
+              glareColor="#1D3225"
+              glareOpacity={0.08}
+              glareAngle={-45}
+              glareSize={150}
+              borderRadius="16px"
+              background="#FAF8F5"
+              borderColor="#E3DFD5"
+              className="p-6 space-y-4 hover:border-[#1D3225] transition-all relative shadow-sm"
+            >
+              <span className="text-[10px] font-mono text-zinc-400">STEP 01 // DATA INGEST</span>
+              <div className="bg-[#F6F4EE] w-10 h-10 flex items-center justify-center border border-[#E3DFD5] text-[#1D3225] rounded-xl">
                 <Wifi className="h-5 w-5" />
               </div>
-              <h3 className="text-xs font-bold text-zinc-200 uppercase tracking-wider">1. Data Convergence</h3>
-              <p className="text-zinc-400 text-[11px] font-sans leading-relaxed">
-                Ingests historical CSV spreadsheets and live MQTT sensor telemetry streams into the exact same database format.
+              <h3 className="text-sm font-bold text-[#1D3225] uppercase tracking-wide">1. Data In</h3>
+              <p className="text-[#3B4C41] text-xs leading-relaxed font-sans">
+                Gathers historical maintenance logs, inspection reports, incident records, and sensor readings — messy, incomplete, and inconsistent. Live sensor streams feed into the exact same pipeline, so nothing is rebuilt when real IoT hardware is ready.
               </p>
-            </div>
+            </GlareHover>
 
             {/* Step 2 */}
-            <div className="border border-zinc-800 bg-zinc-900/20 p-5 space-y-3 relative group">
-              <div className="absolute top-3 right-3 text-xs text-zinc-700 font-black">02</div>
-              <div className="bg-zinc-900 p-2 inline-block border border-zinc-800 text-zinc-400">
+            <GlareHover
+              glareColor="#1D3225"
+              glareOpacity={0.08}
+              glareAngle={-45}
+              glareSize={150}
+              borderRadius="16px"
+              background="#FAF8F5"
+              borderColor="#E3DFD5"
+              className="p-6 space-y-4 hover:border-[#1D3225] transition-all relative shadow-sm"
+            >
+              <span className="text-[10px] font-mono text-zinc-400">STEP 02 // RULES ENGINE</span>
+              <div className="bg-[#F6F4EE] w-10 h-10 flex items-center justify-center border border-[#E3DFD5] text-[#1D3225] rounded-xl">
                 <Cpu className="h-5 w-5" />
               </div>
-              <h3 className="text-xs font-bold text-zinc-200 uppercase tracking-wider">2. Scoring Engine</h3>
-              <p className="text-zinc-400 text-[11px] font-sans leading-relaxed">
-                Evaluates 5 base sub-scores (maintenance, incidents, sensors, inspections, stale data) and flags custom risk scenarios.
+              <h3 className="text-sm font-bold text-[#1D3225] uppercase tracking-wide">2. Risk Scoring</h3>
+              <p className="text-[#3B4C41] text-xs leading-relaxed font-sans">
+                Every asset is scored against a transparent, rule-and-scenario engine (not a black box). It checks individual factors and known dangerous combinations of them, mimicking the domain patterns an experienced safety engineer recognizes.
               </p>
-            </div>
+            </GlareHover>
 
             {/* Step 3 */}
-            <div className="border border-zinc-800 bg-zinc-900/20 p-5 space-y-3 relative group">
-              <div className="absolute top-3 right-3 text-xs text-zinc-700 font-black">03</div>
-              <div className="bg-zinc-900 p-2 inline-block border border-zinc-800 text-zinc-400">
+            <GlareHover
+              glareColor="#1D3225"
+              glareOpacity={0.08}
+              glareAngle={-45}
+              glareSize={150}
+              borderRadius="16px"
+              background="#FAF8F5"
+              borderColor="#E3DFD5"
+              className="p-6 space-y-4 hover:border-[#1D3225] transition-all relative shadow-sm"
+            >
+              <span className="text-[10px] font-mono text-zinc-400">STEP 03 // GENERATED LOGIC</span>
+              <div className="bg-[#F6F4EE] w-10 h-10 flex items-center justify-center border border-[#E3DFD5] text-[#1D3225] rounded-xl">
                 <Terminal className="h-5 w-5" />
               </div>
-              <h3 className="text-xs font-bold text-zinc-200 uppercase tracking-wider">3. Explainable Logic</h3>
-              <p className="text-zinc-400 text-[11px] font-sans leading-relaxed">
-                Sub-scores are processed by an LLM to generate plain-text explanations, strictly constrained to numerical facts only.
+              <h3 className="text-sm font-bold text-[#1D3225] uppercase tracking-wide">3. Flag + Explain</h3>
+              <p className="text-[#3B4C41] text-xs leading-relaxed font-sans">
+                Nothing gets flagged without a reason. "High risk" always comes with *why*: which factors fired, by how much, and whether the situation matches a known risk pattern like repeated failures or silent sensor drift.
               </p>
-            </div>
+            </GlareHover>
 
             {/* Step 4 */}
-            <div className="border border-zinc-800 bg-zinc-900/20 p-5 space-y-3 relative group">
-              <div className="absolute top-3 right-3 text-xs text-zinc-700 font-black">04</div>
-              <div className="bg-zinc-900 p-2 inline-block border border-zinc-800 text-zinc-400">
-                <Activity className="h-5 w-5" />
+            <GlareHover
+              glareColor="#1D3225"
+              glareOpacity={0.08}
+              glareAngle={-45}
+              glareSize={150}
+              borderRadius="16px"
+              background="#FAF8F5"
+              borderColor="#E3DFD5"
+              className="p-6 space-y-4 hover:border-[#1D3225] transition-all relative shadow-sm"
+            >
+              <span className="text-[10px] font-mono text-zinc-400">STEP 04 // PROTOCOLS</span>
+              <div className="bg-[#F6F4EE] w-10 h-10 flex items-center justify-center border border-[#E3DFD5] text-[#1D3225] rounded-xl">
+                <FileText className="h-5 w-5" />
               </div>
-              <h3 className="text-xs font-bold text-zinc-200 uppercase tracking-wider">4. Priority Ranking</h3>
-              <p className="text-zinc-400 text-[11px] font-sans leading-relaxed">
-                Sorts flagged equipment by risk. Ties are broken by asset criticality and historical incident severity to optimize inspector resources.
+              <h3 className="text-sm font-bold text-[#1D3225] uppercase tracking-wide">4. Recommend</h3>
+              <p className="text-[#3B4C41] text-xs leading-relaxed font-sans">
+                Every flag comes with a next step — inspect, maintain, calibrate, or monitor more closely — so the output is something someone can act on today, not just a number to stare at.
               </p>
-            </div>
+            </GlareHover>
 
             {/* Step 5 */}
-            <div className="border border-zinc-800 bg-zinc-900/20 p-5 space-y-3 relative group">
-              <div className="absolute top-3 right-3 text-xs text-zinc-700 font-black">05</div>
-              <div className="bg-zinc-900 p-2 inline-block border border-zinc-800 text-zinc-400">
+            <GlareHover
+              glareColor="#1D3225"
+              glareOpacity={0.08}
+              glareAngle={-45}
+              glareSize={150}
+              borderRadius="16px"
+              background="#FAF8F5"
+              borderColor="#E3DFD5"
+              className="p-6 space-y-4 hover:border-[#1D3225] transition-all relative shadow-sm"
+            >
+              <span className="text-[10px] font-mono text-zinc-400">STEP 05 // STRATEGY</span>
+              <div className="bg-[#F6F4EE] w-10 h-10 flex items-center justify-center border border-[#E3DFD5] text-[#1D3225] rounded-xl">
+                <Activity className="h-5 w-5" />
+              </div>
+              <h3 className="text-sm font-bold text-[#1D3225] uppercase tracking-wide">5. Rank</h3>
+              <p className="text-[#3B4C41] text-xs leading-relaxed font-sans">
+                With limited inspectors and many assets, order matters. IndusLink ranks every flagged risk so the most dangerous situations reach a human first — not the one that happened to get logged most recently.
+              </p>
+            </GlareHover>
+
+            {/* Step 6 */}
+            <GlareHover
+              glareColor="#1D3225"
+              glareOpacity={0.08}
+              glareAngle={-45}
+              glareSize={150}
+              borderRadius="16px"
+              background="#FAF8F5"
+              borderColor="#E3DFD5"
+              className="p-6 space-y-4 hover:border-[#1D3225] transition-all relative shadow-sm"
+            >
+              <span className="text-[10px] font-mono text-zinc-400">STEP 06 // SNAPSHOTS</span>
+              <div className="bg-[#F6F4EE] w-10 h-10 flex items-center justify-center border border-[#E3DFD5] text-[#1D3225] rounded-xl">
                 <Database className="h-5 w-5" />
               </div>
-              <h3 className="text-xs font-bold text-zinc-200 uppercase tracking-wider">5. Actionable Output</h3>
-              <p className="text-zinc-400 text-[11px] font-sans leading-relaxed">
-                Outputs immediate recommendations (inspect, maintain, calibrate, monitor) and appends everything to an audit database.
+              <h3 className="text-sm font-bold text-[#1D3225] uppercase tracking-wide">6. Watch + Log</h3>
+              <p className="text-[#3B4C41] text-xs leading-relaxed font-sans">
+                Every score, every explanation, every recommendation is written to an audit trail. If a risk level climbs between checks, an early warning fires immediately.
               </p>
-            </div>
+            </GlareHover>
+
           </div>
         </div>
       </section>
 
-      {/* 3. Differentiators Grid Section */}
-      <section id="differentiators" className="py-20 border-t border-zinc-900 px-6 max-w-7xl mx-auto border-x border-zinc-900">
-        <div className="space-y-12">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-zinc-800 pb-6">
-            <div>
-              <span className="text-xs text-accent uppercase tracking-widest font-bold">// SYSTEM ATTRIBUTES</span>
-              <h2 className="text-2xl sm:text-3xl font-bold text-white uppercase tracking-tight mt-1">Why IndusLink is Different</h2>
-            </div>
-            <p className="text-zinc-400 text-xs sm:text-sm font-sans max-w-md">
-              We built this console explicitly for safety engineers who cannot afford to act on "black-box" decisions.
+      {/* 5. Why This Isn't Just a Dashboard (styled like the FAQ accordion list) */}
+      <section id="differentiators" className="py-24 border-t border-[#E3DFD5] bg-[#FAF8F5] px-6 max-w-7xl mx-auto border-x border-[#E3DFD5]/70 bg-grid-warm">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+          
+          {/* Left Column Label */}
+          <div className="lg:col-span-4 space-y-4 lg:sticky lg:top-24">
+            <span className="text-xs text-accent uppercase tracking-widest font-mono font-bold">// THE DIFFERENCES</span>
+            <h2 className="text-3xl font-extrabold text-[#1D3225] tracking-tight">A flag without a reason is just noise.</h2>
+            <p className="text-[#3B4C41] text-sm font-sans leading-relaxed">
+              Plenty of systems can put a red badge next to an asset. IndusLink is built around five things a red badge alone can never give you.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-            {/* Diff 1 */}
-            <div className="border border-zinc-800 bg-zinc-900/10 p-5 space-y-3">
-              <div className="text-red-500 border border-red-900/40 bg-red-950/15 w-8 h-8 flex items-center justify-center font-bold text-sm">
-                01
+          {/* Right Column Rows list (Separated by borders) */}
+          <div className="lg:col-span-8 border border-[#E3DFD5] bg-[#F6F4EE]/50 p-6 rounded-2xl shadow-sm space-y-6">
+            
+            {/* Diff Row 1 */}
+            <div className="border-b border-[#E3DFD5] pb-6 space-y-2">
+              <div className="flex justify-between items-center text-xs font-mono text-[#3B4C41]">
+                <span className="font-bold text-[#1D3225]">01 / EXPLAINABLE SCORING</span>
+                <span className="text-red-600 font-bold uppercase text-[9px]">// NO BLACK-BOX</span>
               </div>
-              <h3 className="text-xs font-bold uppercase text-zinc-200">Explainable Scoring</h3>
-              <p className="text-zinc-400 text-[11px] font-sans leading-relaxed">
-                Uses deterministic, expert-defined formulas and scenario checks, not opaque machine learning. Every score matches predefined calculations.
+              <p className="text-[#3B4C41] text-xs sm:text-sm leading-relaxed font-sans">
+                Every risk score traces back to specific, named factors — overdue maintenance, failure history, sensor readings out of range — so an inspector can verify the reasoning, not just trust it.
               </p>
             </div>
 
-            {/* Diff 2 */}
-            <div className="border border-zinc-800 bg-zinc-900/10 p-5 space-y-3">
-              <div className="text-amber-500 border border-amber-900/40 bg-amber-950/15 w-8 h-8 flex items-center justify-center font-bold text-sm">
-                02
+            {/* Diff Row 2 */}
+            <div className="border-b border-[#E3DFD5] pb-6 space-y-2">
+              <div className="flex justify-between items-center text-xs font-mono text-[#3B4C41]">
+                <span className="font-bold text-[#1D3225]">02 / RECOMMENDS ACTION</span>
+                <span className="text-[#E8871E] font-bold uppercase text-[9px]">// TARGETED DIRECTIVES</span>
               </div>
-              <h3 className="text-xs font-bold uppercase text-zinc-200">Targeted Actions</h3>
-              <p className="text-zinc-400 text-[11px] font-sans leading-relaxed">
-                Rather than just flagging anomaly scores, the tool outputs specific operational workflows (inspect / calibrate / repair / monitor).
+              <p className="text-[#3B4C41] text-xs sm:text-sm leading-relaxed font-sans">
+                A risk flag always comes with a next step: inspect, maintain, calibrate, or monitor. Detection without direction just moves the bottleneck.
               </p>
             </div>
 
-            {/* Diff 3 */}
-            <div className="border border-zinc-800 bg-zinc-900/10 p-5 space-y-3">
-              <div className="text-emerald-500 border border-emerald-900/40 bg-emerald-950/15 w-8 h-8 flex items-center justify-center font-bold text-sm">
-                03
+            {/* Diff Row 3 */}
+            <div className="border-b border-[#E3DFD5] pb-6 space-y-2">
+              <div className="flex justify-between items-center text-xs font-mono text-[#3B4C41]">
+                <span className="font-bold text-[#1D3225]">03 / DYNAMIC RANKING</span>
+                <span className="text-[#1D3225] font-bold uppercase text-[9px]">// LIMITED RESOURCES</span>
               </div>
-              <h3 className="text-xs font-bold uppercase text-zinc-200">Resource Ranking</h3>
-              <p className="text-zinc-400 text-[11px] font-sans leading-relaxed">
-                Addresses inspector constraints directly. Out of 1,000 assets, the system bubble-sorts the most dangerous assets to the top automatically.
+              <p className="text-[#3B4C41] text-xs sm:text-sm leading-relaxed font-sans">
+                You don't have enough inspectors to check everything today. IndusLink tells you which one to check *first* using custom tie-breaking rules.
               </p>
             </div>
 
-            {/* Diff 4 */}
-            <div className="border border-zinc-800 bg-zinc-900/10 p-5 space-y-3">
-              <div className="text-sky-500 border border-sky-900/40 bg-sky-950/15 w-8 h-8 flex items-center justify-center font-bold text-sm">
-                04
+            {/* Diff Row 4 */}
+            <div className="border-b border-[#E3DFD5] pb-6 space-y-2">
+              <div className="flex justify-between items-center text-xs font-mono text-[#3B4C41]">
+                <span className="font-bold text-[#1D3225]">04 / FULLY AUDITABLE</span>
+                <span className="text-emerald-700 font-bold uppercase text-[9px]">// TRACEABLE LOGS</span>
               </div>
-              <h3 className="text-xs font-bold uppercase text-zinc-200">Locked-in Audit Trail</h3>
-              <p className="text-zinc-400 text-[11px] font-sans leading-relaxed">
-                Saves a complete snapshot of raw variables, intermediate scores, final classifications, and LLM text to ensure auditability.
+              <p className="text-[#3B4C41] text-xs sm:text-sm leading-relaxed font-sans">
+                The full reasoning behind every recommendation — not just the final verdict — is logged, because a system feeding into safety decisions has to show its work.
               </p>
             </div>
 
-            {/* Diff 5 */}
-            <div className="border border-zinc-800 bg-zinc-900/10 p-5 space-y-3">
-              <div className="text-indigo-500 border border-indigo-900/40 bg-indigo-950/15 w-8 h-8 flex items-center justify-center font-bold text-sm">
-                05
+            {/* Diff Row 5 */}
+            <div className="pb-2 space-y-2">
+              <div className="flex justify-between items-center text-xs font-mono text-[#3B4C41]">
+                <span className="font-bold text-[#1D3225]">05 / NOISY-DATA TOLERANCE</span>
+                <span className="text-purple-700 font-bold uppercase text-[9px]">// FIELD RESILIENT</span>
               </div>
-              <h3 className="text-xs font-bold uppercase text-zinc-200">Noisy-Data Tolerance</h3>
-              <p className="text-zinc-400 text-[11px] font-sans leading-relaxed">
-                Gracefully digests duplicate readings, silent periods, and missing records. Outdated inputs trigger an explicit "blind spot" risk boost.
+              <p className="text-[#3B4C41] text-xs sm:text-sm leading-relaxed font-sans">
+                Incomplete inspection records, inconsistent formatting, and sensors that go silent. IndusLink is designed to work with data as it actually exists in the field.
               </p>
             </div>
+
           </div>
+
         </div>
       </section>
 
-      {/* 4. Demo Preview Section */}
-      <section id="demo" className="py-20 border-t border-zinc-900 bg-[#06080A] px-6">
-        <div className="max-w-7xl mx-auto space-y-12">
+      {/* 6. See It In Action (Demo section - Cream background with forest green cards) */}
+      <section id="demo" className="py-24 border-t border-[#E3DFD5] bg-[#F6F4EE] px-6 bg-grid-warm">
+        <div className="max-w-7xl mx-auto space-y-16">
           <div className="text-center max-w-2xl mx-auto space-y-3">
-            <span className="text-xs text-accent uppercase tracking-widest font-bold">// CONSOLE WALKTHROUGH</span>
-            <h2 className="text-2xl sm:text-3xl font-bold text-white uppercase tracking-tight">System Demo Preview</h2>
-            <p className="text-zinc-400 text-xs sm:text-sm font-sans">
-              Review how a single asset moves from raw telemetry to prioritised intervention.
+            <span className="text-xs text-accent uppercase tracking-widest font-mono font-bold">// WALK THROUGH ONE ASSET</span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#1D3225] tracking-tight">From a spreadsheet row to a decision</h2>
+            <p className="text-[#3B4C41] text-sm font-sans">
+              See what an actual analyzed safety flag looks like to an inspector in the field.
             </p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-            {/* Asset card journey (mock console component) */}
-            <div className="lg:col-span-6 border border-zinc-800 bg-[#0B0F12] p-6 space-y-5 flex flex-col justify-between">
+            {/* The Main Console Card Panel in Forest Green (rounded-2xl) */}
+            <div className="lg:col-span-7 border border-[#274433] bg-[#13261C] p-6 space-y-6 flex flex-col justify-between shadow-2xl rounded-2xl relative text-zinc-150">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 blur-xl pointer-events-none" />
+
               <div className="space-y-4">
-                <div className="flex items-center justify-between border-b border-zinc-850 pb-3">
-                  <div className="space-y-0.5">
-                    <span className="text-[10px] text-zinc-500 tracking-wider">SELECTED ASSET ID</span>
-                    <h4 className="text-sm font-black text-white">PUMP-014</h4>
+                <div className="flex justify-between items-center border-b border-[#274433] pb-3">
+                  <div>
+                    <span className="text-[10px] text-zinc-400 font-mono tracking-wider">IDENTIFICATION SPEC</span>
+                    <h4 className="text-base font-bold text-white font-mono">ASSET A-114</h4>
                   </div>
-                  <div className="px-2.5 py-1 bg-red-950/50 border border-red-800 text-red-500 text-[10px] font-bold tracking-widest uppercase">
-                    HIGH RISK // SCORE: 87.5
-                  </div>
-                </div>
-
-                {/* Subscores */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-[#080B0D] p-2.5 border border-zinc-850">
-                    <p className="text-[9px] text-zinc-500">MAINTENANCE DELAY</p>
-                    <p className="text-xs font-bold text-red-400 font-mono">92 / 100 (OVERDUE)</p>
-                  </div>
-                  <div className="bg-[#080B0D] p-2.5 border border-zinc-850">
-                    <p className="text-[9px] text-zinc-500">SENSOR ANOMALIES</p>
-                    <p className="text-xs font-bold text-amber-400 font-mono">45 / 100 (STRESS)</p>
-                  </div>
-                  <div className="bg-[#080B0D] p-2.5 border border-zinc-850">
-                    <p className="text-[9px] text-zinc-500">HISTORICAL INCIDENTS</p>
-                    <p className="text-xs font-bold text-emerald-400 font-mono">15 / 100 (STABLE)</p>
-                  </div>
-                  <div className="bg-[#080B0D] p-2.5 border border-zinc-850">
-                    <p className="text-[9px] text-zinc-500">INSPECTION STALENESS</p>
-                    <p className="text-xs font-bold text-red-400 font-mono">90 / 100 (CRITICAL)</p>
+                  <div className="px-3 py-1 bg-red-950/40 border border-red-800 text-red-400 text-xs font-bold font-mono tracking-wider rounded">
+                    HIGH RISK // 78 SCORE
                   </div>
                 </div>
 
-                {/* Scenarios matched */}
-                <div className="bg-amber-950/15 border border-amber-900/30 p-3 space-y-1">
-                  <div className="flex items-center justify-between text-[10px] font-bold text-amber-500 uppercase tracking-wide">
-                    <span>Matched Scenario</span>
-                    <span>SILENT_DEGRADATION</span>
+                <div className="grid grid-cols-2 gap-3 text-xs font-mono">
+                  <div className="bg-[#1A3226] p-3 border border-[#274433] rounded-lg">
+                    <span className="text-zinc-400 text-[10px]">ASSET TYPE</span>
+                    <p className="text-zinc-200 mt-0.5 font-bold">Compressor, Bay 3</p>
                   </div>
-                  <p className="text-zinc-400 text-[10px] font-sans leading-relaxed">
-                    Triggered because pressure sensor shows upward drift without a corresponding inspection or preventive overhaul in 60 days.
-                  </p>
-                </div>
-
-                {/* LLM Explanation */}
-                <div className="space-y-1">
-                  <span className="text-[10px] text-zinc-500 uppercase font-bold">AI Explanation (Claude Grounded)</span>
-                  <div className="bg-zinc-900/40 border border-zinc-800 p-3 text-[11px] font-sans text-zinc-300 leading-relaxed">
-                    "Reciprocating Water Pump pressure sensor has drifted upwards by 14% over 14 days. Combined with overdue maintenance (3 weeks) and no recent inspection (60 days), this matches the Silent Degradation signature. Raw calculation maps to High Risk due to compounding indicators."
+                  <div className="bg-[#1A3226] p-3 border border-[#274433] rounded-lg">
+                    <span className="text-zinc-400 text-[10px]">MATCHED SCENARIO</span>
+                    <p className="text-amber-400 mt-0.5 font-bold">Silent Degradation</p>
                   </div>
                 </div>
 
-                {/* Recommended Action */}
-                <div className="space-y-1">
-                  <span className="text-[10px] text-zinc-500 uppercase font-bold">Recommended Intervention</span>
-                  <div className="border border-zinc-800 bg-[#080B0D] p-3 text-[11px] text-emerald-400 font-semibold flex items-start space-x-2">
-                    <Check className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
-                    <span>SCHEDULE IMMEDIATE INSPECTION & VALVE CALIBRATION</span>
+                <div className="space-y-2">
+                  <span className="text-[10px] text-zinc-400 font-mono uppercase tracking-wider font-bold">Calculated Narrative</span>
+                  <div className="bg-[#1A3226]/50 border border-[#274433] p-4 text-xs text-zinc-300 leading-relaxed font-mono rounded-lg">
+                    <p className="text-amber-400">// ANALYZED MATCH LOG:</p>
+                    <p className="mt-1 leading-relaxed">
+                      Pressure readings trending toward the safe limit on 4 of the last 6 checks, combined with maintenance overdue by 214 days (interval: 90 days) and no inspection logged in over 5 months.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <span className="text-[10px] text-zinc-400 font-mono uppercase tracking-wider font-bold">Recommended Action</span>
+                  <div className="border border-[#274433] bg-[#1A3226] p-4 text-xs text-emerald-400 font-bold flex items-center space-x-2 rounded-lg">
+                    <Check className="h-4 w-4 text-emerald-400" />
+                    <span>SCHEDULE INSPECTION AND PRESSURE RECALIBRATION THIS WEEK</span>
                   </div>
                 </div>
               </div>
 
-              <div className="border-t border-zinc-850 pt-4 flex justify-between items-center text-[10px] text-zinc-500">
-                <span>AUDIT_ID: AUD-832049</span>
-                <span>LOGGED_AT: 2026-08-22T14:23:11</span>
+              <div className="border-t border-[#274433] pt-4 flex justify-between items-center text-[10px] text-zinc-400 font-mono">
+                <span>AUDIT_LOG_ID: AUD-A114-082</span>
+                <span>SYSTEM_TIMESTAMP: 2026-08-22</span>
               </div>
             </div>
 
-            {/* Media/GIF Placeholder Frame */}
-            <div className="lg:col-span-6 border border-zinc-800 bg-zinc-950 p-1 flex flex-col justify-between shadow-xl">
-              <div className="bg-[#0A0E10] border border-zinc-900 flex-grow flex flex-col items-center justify-center p-8 text-center relative overflow-hidden min-h-[300px]">
-                {/* Simulated Scope Lines */}
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(14,124,123,0.08)_0%,transparent_70%)] pointer-events-none" />
-                <div className="absolute w-full h-[1px] bg-zinc-800 top-[30%] left-0" />
-                <div className="absolute w-full h-[1px] bg-zinc-800 top-[70%] left-0" />
-                <div className="absolute h-full w-[1px] bg-zinc-800 left-[30%] top-0" />
-                <div className="absolute h-full w-[1px] bg-zinc-800 left-[70%] top-0" />
-
+            {/* Video player card / mock frame */}
+            <div className="lg:col-span-5 border border-[#274433] bg-[#13261C] p-1 flex flex-col justify-between shadow-2xl rounded-2xl text-zinc-150">
+              <div className="bg-[#0A1711] border border-[#274433]/40 flex-grow flex flex-col items-center justify-center p-8 text-center relative overflow-hidden min-h-[300px] rounded-t-xl">
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.06)_0%,transparent_75%)] pointer-events-none" />
+                
                 <div className="relative z-10 space-y-4">
-                  <div className="inline-flex p-3 bg-zinc-900 border border-zinc-800 text-zinc-400">
-                    <Play className="h-6 w-6 text-zinc-500 fill-zinc-650" />
+                  <div className="inline-flex p-4 bg-[#13261C] border border-[#274433] text-zinc-400 shadow-xl rounded-xl">
+                    <Play className="h-6 w-6 text-zinc-300 fill-zinc-300" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-zinc-200 uppercase tracking-widest">Walkthrough Media Placeholder</h4>
-                    <p className="text-zinc-500 text-[10px] font-sans mt-1 max-w-sm mx-auto">
-                      This container is reserved for a GIF or video demonstrating live telemetry updates and inspector details in the console app.
+                    <h4 className="text-xs font-bold text-zinc-200 uppercase tracking-widest font-mono">Console Demo Walkthrough</h4>
+                    <p className="text-zinc-450 text-[11px] font-sans mt-2 max-w-xs mx-auto leading-relaxed">
+                      Reserved space for a GIF or video demonstrating live telemetry updates, risk priorities, and log streams inside the console dashboard.
                     </p>
                   </div>
                 </div>
               </div>
-              <div className="bg-[#080B0D] p-3 text-center border-t border-zinc-900">
+              
+              <div className="bg-[#13261C] p-4 text-center border-t border-[#274433]/45 rounded-b-xl">
                 <button
                   onClick={onEnterApp}
-                  className="inline-flex items-center space-x-2 text-xs font-bold text-accent hover:underline uppercase tracking-widest"
+                  className="inline-flex items-center space-x-2 text-xs font-bold text-amber-400 hover:underline uppercase tracking-widest font-mono"
                 >
-                  <span>TEST CONSOLE DEMO NOW</span>
+                  <span>LAUNCH OPERATIONAL CONSOLE NOW</span>
                   <ExternalLink className="h-3.5 w-3.5" />
                 </button>
               </div>
             </div>
+
+          </div>
+
+          {/* Sub-thumbnail Cards (styled like in third mockup, cream/off-white palette) */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 pt-4 border-t border-[#E3DFD5]">
+            <GlareHover
+              glareColor="#1D3225"
+              glareOpacity={0.08}
+              glareAngle={-45}
+              glareSize={150}
+              borderRadius="12px"
+              background="#FAF8F5"
+              borderColor="#E3DFD5"
+              className="p-4 space-y-2 cursor-pointer hover:border-[#1D3225] transition-all shadow-sm"
+            >
+              <span className="text-[9px] font-mono text-[#3B4C41]">ASSET PUMP-014</span>
+              <p className="text-xs font-bold text-[#1D3225]">Coolant Pump</p>
+              <span className="px-2 py-0.5 bg-red-50 text-red-600 border border-red-200 text-[9px] font-mono font-bold rounded">HIGH RISK</span>
+            </GlareHover>
+            <GlareHover
+              glareColor="#1D3225"
+              glareOpacity={0.08}
+              glareAngle={-45}
+              glareSize={150}
+              borderRadius="12px"
+              background="#FAF8F5"
+              borderColor="#E3DFD5"
+              className="p-4 space-y-2 cursor-pointer hover:border-[#1D3225] transition-all shadow-sm"
+            >
+              <span className="text-[9px] font-mono text-[#3B4C41]">ASSET BOILER-01</span>
+              <p className="text-xs font-bold text-[#1D3225]">Steam Boiler A</p>
+              <span className="px-2 py-0.5 bg-amber-50 text-amber-600 border border-amber-200 text-[9px] font-mono font-bold rounded">WARN RISK</span>
+            </GlareHover>
+            <GlareHover
+              glareColor="#1D3225"
+              glareOpacity={0.08}
+              glareAngle={-45}
+              glareSize={150}
+              borderRadius="12px"
+              background="#FAF8F5"
+              borderColor="#E3DFD5"
+              className="p-4 space-y-2 cursor-pointer hover:border-[#1D3225] transition-all shadow-sm"
+            >
+              <span className="text-[9px] font-mono text-[#3B4C41]">ASSET TURBINE-08</span>
+              <p className="text-xs font-bold text-[#1D3225]">Power Turbine B</p>
+              <span className="px-2 py-0.5 bg-zinc-100 text-zinc-500 border border-zinc-200 text-[9px] font-mono font-bold rounded">SYSTEM OK</span>
+            </GlareHover>
+            <GlareHover
+              glareColor="#1D3225"
+              glareOpacity={0.08}
+              glareAngle={-45}
+              glareSize={150}
+              borderRadius="12px"
+              background="#FAF8F5"
+              borderColor="#E3DFD5"
+              className="p-4 space-y-2 cursor-pointer hover:border-[#1D3225] transition-all shadow-sm"
+            >
+              <span className="text-[9px] font-mono text-[#3B4C41]">ASSET VALVE-09</span>
+              <p className="text-xs font-bold text-[#1D3225]">Shutoff Valve V1</p>
+              <span className="px-2 py-0.5 bg-red-50 text-red-600 border border-red-200 text-[9px] font-mono font-bold rounded">HIGH RISK</span>
+            </GlareHover>
+          </div>
+
+        </div>
+      </section>
+
+      {/* 7. Under the Hood (Architecture section) */}
+      <section id="architecture" className="py-24 border-t border-[#E3DFD5] bg-[#FAF8F5] px-6 max-w-6xl mx-auto bg-grid-warm">
+        <div className="space-y-12">
+          <div className="space-y-3">
+            <span className="text-xs text-accent uppercase tracking-widest font-mono font-bold">// ARCHITECTURE</span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#1D3225] tracking-tight">Judgment stays deterministic. Language gets generated.</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <div className="lg:col-span-7 text-[#3B4C41] text-sm sm:text-base leading-relaxed space-y-4 font-sans">
+              <p>
+                Every risk score, every rank, every recommended action comes from a transparent rule-and-scenario engine — the same inputs will always produce the same output, which matters when a recommendation could influence a real safety decision.
+              </p>
+              <p>
+                A language model sits on top of that, but only to translate the engine's structured findings into plain, readable explanations — it never decides what's risky.
+              </p>
+              <p>
+                The two are kept separate on purpose: one layer for judgment, one layer for language, and a full audit log underneath both, capturing not just what was recommended, but exactly why.
+              </p>
+            </div>
+
+            {/* Architecture Stack Drawing Mock with Rounded Corners */}
+            <div className="lg:col-span-5 border border-[#E3DFD5] bg-[#F6F4EE] p-5 space-y-3 text-xs font-mono shadow-sm rounded-2xl">
+              <div className="border border-[#E3DFD5] p-3.5 bg-[#FAF8F5] rounded-xl relative shadow-sm">
+                <span className="absolute top-2.5 right-3 text-[9px] text-[#3B4C41]/60">LAYER 03</span>
+                <span className="text-[#1D3225] font-bold font-sans">LLM TRANSLATION LAYER</span>
+                <p className="text-[10px] text-zinc-500 mt-1 font-sans">Claude API text output (facts constrained)</p>
+              </div>
+              <div className="border border-[#E3DFD5] p-3.5 bg-[#FAF8F5] rounded-xl relative shadow-sm">
+                <span className="absolute top-2.5 right-3 text-[9px] text-[#3B4C41]/60">LAYER 02</span>
+                <span className="text-[#C0392B] font-bold font-sans">DETERMINISTIC EVAL ENGINE</span>
+                <p className="text-[10px] text-zinc-500 mt-1 font-sans">Subscores, thresholds &amp; expert scenarios</p>
+              </div>
+              <div className="border border-[#E3DFD5] p-3.5 bg-[#FAF8F5] rounded-xl relative shadow-sm">
+                <span className="absolute top-2.5 right-3 text-[9px] text-[#3B4C41]/60">LAYER 01</span>
+                <span className="text-emerald-700 font-bold font-sans">DATA CONVERGENCE BASE</span>
+                <p className="text-[10px] text-zinc-500 mt-1 font-sans">PostgreSQL relational tables, JSONB audit logs</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* 5. Architecture Snapshot Section */}
-      <section id="architecture" className="py-20 border-t border-zinc-900 px-6 max-w-7xl mx-auto border-x border-zinc-900">
-        <div className="space-y-12">
-          <div className="text-center max-w-2xl mx-auto space-y-3">
-            <span className="text-xs text-accent uppercase tracking-widest font-bold">// UNDER THE HOOD</span>
-            <h2 className="text-2xl sm:text-3xl font-bold text-white uppercase tracking-tight">System Architecture</h2>
-            <p className="text-zinc-400 text-xs sm:text-sm font-sans">
-              Deliberately separate, independent system layers built for safety, transparency, and validation.
+      {/* 8. Built for the Real World (IoT Section) */}
+      <section id="iot" className="py-24 border-t border-[#E3DFD5] bg-[#F6F4EE] px-6 bg-grid-warm">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          
+          <div className="lg:col-span-5 bg-[#13261C] border border-[#274433] p-5 space-y-3 font-mono text-xs shadow-2xl rounded-2xl text-zinc-200">
+            <div className="flex justify-between items-center text-[10px] text-zinc-400 border-b border-[#274433] pb-2">
+              <span>WOKWI SIMULATOR STACK</span>
+              <span className="text-amber-400">MQTT LIVE</span>
+            </div>
+            <div className="space-y-1.5">
+              <div>
+                <span className="text-zinc-400">MICROCONTROLLER:</span> <span className="text-zinc-200">ESP32 Sim</span>
+              </div>
+              <div>
+                <span className="text-zinc-400">PROTOCOL:</span> <span className="text-zinc-200">MQTT over WebSockets</span>
+              </div>
+              <div>
+                <span className="text-zinc-400">BROKER:</span> <span className="text-zinc-200">broker.hivemq.com</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="lg:col-span-7 space-y-4">
+            <span className="text-xs font-mono text-[#3B4C41] tracking-widest uppercase">// BEYOND THE MOCK DATA</span>
+            <h2 className="text-3xl font-extrabold text-[#1D3225] tracking-tight uppercase">The live-sensor path isn't a diagram. It's wired.</h2>
+            <p className="text-[#3B4C41] text-sm sm:text-base leading-relaxed font-sans">
+              To prove the system works with live data, not just historical CSVs, sensor input is simulated through Wokwi — virtual industrial sensors publishing real-time readings over MQTT — feeding into the exact same scoring pipeline used for historical records. When real IoT hardware is ready to plug in, nothing about the pipeline has to change. Just the source.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Layer 1 */}
-            <div className="border border-zinc-800 bg-[#0B0F12] p-6 space-y-4">
-              <div className="flex items-center space-x-3 text-red-500">
-                <Cpu className="h-5 w-5" />
-                <h3 className="text-xs font-bold uppercase tracking-wider">1. Rules & Scenarios</h3>
-              </div>
-              <p className="text-zinc-400 text-xs font-sans leading-relaxed">
-                Deterministic calculation of raw sub-scores and scenario logic written in pure Python. No stochastic code makes the risk judgment.
-              </p>
-              <div className="border border-zinc-850 p-2.5 bg-black/40 text-[9px] text-zinc-500 font-mono leading-tight">
-                def matches_silent_degradation(sensor_trend, maint_overdue):<br/>
-                &nbsp;&nbsp;return sensor_trend &gt; 0.1 and maint_overdue &gt; 21
-              </div>
-            </div>
+        </div>
+      </section>
 
-            {/* Layer 2 */}
-            <div className="border border-zinc-800 bg-[#0B0F12] p-6 space-y-4">
-              <div className="flex items-center space-x-3 text-amber-500">
-                <Layers className="h-5 w-5" />
-                <h3 className="text-xs font-bold uppercase tracking-wider">2. Claude Explainer</h3>
-              </div>
-              <p className="text-zinc-400 text-xs font-sans leading-relaxed">
-                Claude API translates structured evaluation results into plain-text reports, constrained to reference only numerical facts provided in the JSON input.
-              </p>
-              <div className="border border-zinc-850 p-2.5 bg-black/40 text-[9px] text-zinc-500 font-mono leading-tight">
-                [SYSTEM] Reference only values present in: risk_assessment.json. Do not extrapolate trends.
-              </div>
-            </div>
+      {/* 9. Closing / CTA Section with large curved edge */}
+      <section className="py-32 border-t border-[#E3DFD5] bg-[#FAF8F5] px-6 relative rounded-t-[3.5rem] shadow-sm max-w-7xl mx-auto border-x border-[#E3DFD5]/70 bg-grid-warm">
+        <div className="max-w-4xl mx-auto text-center space-y-8 relative z-10">
+          <span className="text-xs text-accent uppercase tracking-widest font-mono font-bold">// THE POINT</span>
+          <h2 className="text-3xl sm:text-5xl font-black text-[#1D3225] leading-tight uppercase max-w-3xl mx-auto">
+            <FoldText
+              text="The warning was never missing. Someone just needed to be reading everything, all the time."
+              splitBy="word"
+              fontSize="inherit"
+              fontWeight="inherit"
+              color="#1D3225"
+              trigger="scroll"
+              duration={1.2}
+              stagger={0.06}
+            />
+          </h2>
+          <p className="text-[#3B4C41] text-base sm:text-lg max-w-2xl mx-auto font-sans leading-relaxed">
+            IndusLink doesn't replace inspectors. It gives them what they've never had enough time for — every record, cross-referenced, continuously, with the reasoning laid out and the most dangerous risks surfaced first.
+          </p>
 
-            {/* Layer 3 */}
-            <div className="border border-zinc-800 bg-[#0B0F12] p-6 space-y-4">
-              <div className="flex items-center space-x-3 text-emerald-500">
-                <Database className="h-5 w-5" />
-                <h3 className="text-xs font-bold uppercase tracking-wider">3. Append Audit Logs</h3>
-              </div>
-              <p className="text-zinc-400 text-xs font-sans leading-relaxed">
-                Every inspection, assessment run, and telemetry trigger is appended to a Postgres JSONB table. Decisions are always reviewable.
-              </p>
-              <div className="border border-zinc-850 p-2.5 bg-black/40 text-[9px] text-zinc-500 font-mono leading-tight">
-                INSERT INTO audit_logs (asset_id, sub_scores, final_score, llm_prose) VALUES (...)
-              </div>
-            </div>
+          <div className="pt-4">
+            <button
+              onClick={onEnterApp}
+              className="px-8 py-4 bg-[#1D3225] hover:bg-[#15291D] text-white text-xs font-bold font-mono uppercase tracking-widest transition-all inline-flex items-center space-x-3 hover:shadow-[0_4px_14px_rgba(29,50,37,0.2)] rounded-lg border border-[#15291D]"
+            >
+              <span>LAUNCH OPERATIONAL CONSOLE</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </section>
 
-      {/* 6. IoT Simulation Note Section */}
-      <section id="iot" className="py-20 border-t border-zinc-900 bg-[#06080A] px-6">
-        <div className="max-w-7xl mx-auto border border-zinc-800 bg-[#0B0F12] p-8 relative overflow-hidden">
-          {/* Subtle background connection lines */}
-          <div className="absolute right-0 bottom-0 opacity-10 pointer-events-none">
-            <Wifi className="w-64 h-64 text-accent" />
+      {/* Footer Section in deep forest green */}
+      <footer className="bg-[#13261C] py-16 px-6 text-zinc-150">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+          <div className="space-y-1.5">
+            <h5 className="text-sm font-bold text-white uppercase tracking-wider font-mono">INDUSLINK</h5>
+            <p className="text-xs text-zinc-400 font-sans">Developed for safety validation. All indicators simulated.</p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
-            <div className="lg:col-span-7 space-y-4">
-              <div className="inline-flex items-center space-x-2 border border-amber-900/50 bg-amber-950/20 px-2.5 py-0.5 text-[10px] text-accent uppercase tracking-wider">
-                <span className="w-1.5 h-1.5 rounded-full bg-accent animate-ping" />
-                <span>MQTT telemetry demo active</span>
-              </div>
-              <h2 className="text-2xl font-bold text-white uppercase tracking-tight">Wokwi ESP32 IoT Integration</h2>
-              <p className="text-zinc-400 text-xs sm:text-sm font-sans leading-relaxed">
-                We validated the "live telemetry" path by configuring a browser-based ESP32 simulator in **Wokwi** with virtual sensors (like a dial-based potentiometer for pressures). 
-                The simulator publishes readings to a public MQTT broker, which our FastAPI service picks up using a `paho-mqtt` background subscriber. 
-                Because live sensor metrics hit the exact same pipeline as historical records, updating the telemetry path requires zero system rewrites.
-              </p>
-            </div>
-            
-            <div className="lg:col-span-5 bg-zinc-950/60 p-4 border border-zinc-800 space-y-3 font-mono text-xs">
-              <div className="flex justify-between items-center text-[10px] text-zinc-500 border-b border-zinc-900 pb-2">
-                <span>SIMULATED MQTT TOPIC</span>
-                <span>STATUS: OK</span>
-              </div>
-              <div className="text-[11px] text-zinc-300">
-                <span className="text-amber-500">Topic:</span> <code className="text-zinc-100 font-mono text-xs bg-zinc-900 px-1">riskradar/PUMP-014/pressure</code>
-              </div>
-              <div className="text-[11px] text-zinc-300">
-                <span className="text-accent">Broker:</span> <code className="text-zinc-100 font-mono text-xs bg-zinc-900 px-1">broker.hivemq.com</code>
-              </div>
-              <div className="text-[11px] text-zinc-300">
-                <span className="text-emerald-500">Payload:</span> <code className="text-zinc-100 font-mono text-xs bg-zinc-900 px-1">{"{"}"value": 84.6, "unit": "psi"{"}"}</code>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 7. Tech Stack Strip Section */}
-      <section className="py-12 border-t border-zinc-900 px-6 bg-[#040608]">
-        <div className="max-w-7xl mx-auto">
-          <p className="text-center text-[10px] text-zinc-500 uppercase tracking-widest mb-6 font-bold">SYSTEM TECH COMPLIANCE DEPLOYMENT</p>
-          <div className="flex flex-wrap justify-center items-center gap-4 sm:gap-8 text-xs text-zinc-400 font-bold">
-            <span className="border border-zinc-850 px-3 py-1.5 bg-zinc-900/30 uppercase tracking-wider text-[10px]">Python &amp; FastAPI</span>
-            <span className="border border-zinc-850 px-3 py-1.5 bg-zinc-900/30 uppercase tracking-wider text-[10px]">PostgreSQL (JSONB)</span>
-            <span className="border border-zinc-850 px-3 py-1.5 bg-zinc-900/30 uppercase tracking-wider text-[10px]">Claude API</span>
-            <span className="border border-zinc-850 px-3 py-1.5 bg-zinc-900/30 uppercase tracking-wider text-[10px]">Wokwi ESP32</span>
-            <span className="border border-zinc-850 px-3 py-1.5 bg-zinc-900/30 uppercase tracking-wider text-[10px]">MQTT Broker</span>
-            <span className="border border-zinc-850 px-3 py-1.5 bg-zinc-900/30 uppercase tracking-wider text-[10px]">React &amp; Tailwind</span>
-          </div>
-        </div>
-      </section>
-
-      {/* 8. Footer Section */}
-      <footer className="border-t border-zinc-900 bg-[#030507] py-12 px-6">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="space-y-1">
-            <h5 className="text-xs font-bold text-white uppercase tracking-wider">INDUSLINK / RISKRADAR</h5>
-            <p className="text-[10px] text-zinc-500 font-sans">Developed for Safety Hackathon. All calculations simulated.</p>
+          <div className="flex items-center space-x-8 text-xs text-zinc-300 font-mono uppercase tracking-wider">
+            <a href="#" className="hover:text-white transition-colors">GitHub Repository</a>
+            <span className="text-emerald-700">|</span>
+            <a href="#" className="hover:text-white transition-colors">Walkthrough Video</a>
           </div>
 
-          <div className="flex items-center space-x-6 text-[11px] text-zinc-400">
-            <a href="#" className="hover:text-zinc-100 transition-colors uppercase">GitHub Repository</a>
-            <span className="text-zinc-700">|</span>
-            <a href="#" className="hover:text-zinc-100 transition-colors uppercase">Walkthrough Video</a>
-          </div>
-
-          <div className="text-[10px] text-zinc-500">
-            CONSOLE v1.0.4 &copy; 2026. APPEND-ONLY RECORD.
+          <div className="text-xs text-zinc-400 font-mono uppercase tracking-wider">
+            CONSOLE v1.0.4 &bull; IMMUTABLE STATE
           </div>
         </div>
       </footer>
