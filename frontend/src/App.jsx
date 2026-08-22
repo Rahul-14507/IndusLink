@@ -15,6 +15,7 @@ import EarlyWarningBanner from "./components/EarlyWarningBanner";
 import AuditLogTable from "./components/AuditLogTable";
 import DashboardTrends from "./components/DashboardTrends";
 import LiveFeedIndicator from "./components/LiveFeedIndicator";
+import LandingPage from "./components/LandingPage";
 
 // API Base URL
 const API_BASE = "http://127.0.0.1:8000";
@@ -28,7 +29,7 @@ const queryClient = new QueryClient({
   },
 });
 
-function RiskRadarApp() {
+function RiskRadarApp({ onLeaveApp }) {
   const [activeTab, setActiveTab] = useState("queue"); // "queue" | "trends" | "audit"
   const [selectedAssetId, setSelectedAssetId] = useState(null);
   const [auditAssetFilter, setAuditAssetFilter] = useState("");
@@ -317,9 +318,22 @@ function RiskRadarApp() {
 }
 
 export default function App() {
+  const [showApp, setShowApp] = useState(() => {
+    return window.location.pathname === "/console";
+  });
+
+  const handleEnterApp = () => {
+    setShowApp(true);
+    window.history.pushState({ path: "/console" }, "", "/console");
+  };
+
   return (
     <QueryClientProvider client={queryClient}>
-      <RiskRadarApp />
+      {showApp ? (
+        <RiskRadarApp />
+      ) : (
+        <LandingPage onEnterApp={handleEnterApp} />
+      )}
     </QueryClientProvider>
   );
 }
