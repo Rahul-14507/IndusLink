@@ -193,7 +193,7 @@ export default function AssetDetailPage({ assetId, assetDetail, history, onBack 
                   `"${scoreRecord.explanation_text}"`
                 ) : (
                   <span className="text-ink-muted font-normal">
-                    Plain language explanation is unavailable because the Groq API key is missing. The deterministic rule scoring remained fully operational. Match status: {matchedScenarios.join(", ") || "No scenario rules triggered."}
+                    Plain language explanation is unavailable (verify GROQ_API_KEY environment variable or check if Groq rate limits are exceeded). The deterministic rule scoring remained fully operational. Match status: {matchedScenarios.join(", ") || "No scenario rules triggered."}
                   </span>
                 )}
               </div>

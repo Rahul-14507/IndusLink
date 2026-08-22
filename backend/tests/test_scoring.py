@@ -156,3 +156,39 @@ def test_scenario_blind_spot():
     assert "blind_spot" in matched
     assert forced_min == "medium"
     assert bucket_for(final, forced_min) == "medium"
+
+
+def test_boiler_anomaly_and_critical_stress_scenarios():
+    equipment = {"asset_id": "BOILER-01", "type": "boiler", "criticality": 4}
+    run_date = datetime.date(2026, 8, 22)
+    
+    # 1. Boiler with 1 breach (temperature out of range)
+    readings_1_breach = [
+        {"asset_id": "BOILER-01", "ts": "2026-08-22T12:00:00", "metric": "temperature", "value": 80.0, "safe_min": 15.0, "safe_max": 40.0},
+        {"asset_id": "BOILER-01", "ts": "2026-08-22T12:00:00", "metric": "humidity", "value": 60.0, "safe_min": 30.0, "safe_max": 80.0},
+        {"asset_id": "BOILER-01", "ts": "2026-08-22T12:00:00", "metric": "pressure", "value": 1000.0, "safe_min": 950.0, "safe_max": 1050.0}
+    ]
+    data_1_breach = AssetData("BOILER-01", equipment, [], [], [], readings_1_breach, run_date)
+    sub_1 = compute_subscores("BOILER-01", data_1_breach)
+    base_1 = compute_base_score(sub_1)
+    final_1, matched_1, forced_min_1 = apply_scenarios(base_1, data_1_breach)
+    
+    assert "boiler_anomaly_warning" in matched_1
+    assert "boiler_critical_stress" not in matched_1
+    assert forced_min_1 == "medium"
+    assert bucket_for(final_1, forced_min_1) == "medium"
+    
+    # 2. Boiler with 2 breaches (temperature and pressure out of range)
+    readings_2_breaches = [
+        {"asset_id": "BOILER-01", "ts": "2026-08-22T12:00:00", "metric": "temperature", "value": 80.0, "safe_min": 15.0, "safe_max": 40.0},
+        {"asset_id": "BOILER-01", "ts": "2026-08-22T12:00:00", "metric": "humidity", "value": 60.0, "safe_min": 30.0, "safe_max": 80.0},
+        {"asset_id": "BOILER-01", "ts": "2026-08-22T12:00:00", "metric": "pressure", "value": 1090.0, "safe_min": 950.0, "safe_max": 1050.0}
+    ]
+    data_2_breaches = AssetData("BOILER-01", equipment, [], [], [], readings_2_breaches, run_date)
+    sub_2 = compute_subscores("BOILER-01", data_2_breaches)
+    base_2 = compute_base_score(sub_2)
+    final_2, matched_2, forced_min_2 = apply_scenarios(base_2, data_2_breaches)
+    
+    assert "boiler_critical_stress" in matched_2
+    assert forced_min_2 == "high"
+    assert bucket_for(final_2, forced_min_2) == "high"

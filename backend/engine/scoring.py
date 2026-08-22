@@ -172,6 +172,24 @@ class AssetData:
                         return True
         return False
 
+    def count_active_breaches(self) -> int:
+        # Check latest reading for each metric to see if it is currently out of bounds
+        by_metric = {}
+        for r in self.sensor_readings:
+            metric = r["metric"].lower().strip()
+            if metric not in by_metric:
+                by_metric[metric] = r
+                
+        breaches = 0
+        for metric, r in by_metric.items():
+            val = r.get("value")
+            s_min = r.get("safe_min")
+            s_max = r.get("safe_max")
+            if val is not None:
+                if (s_min is not None and val < s_min) or (s_max is not None and val > s_max):
+                    breaches += 1
+        return breaches
+
 
     def sensor_trending_toward_limit(self) -> bool:
         # Group readings by metric
@@ -345,6 +363,32 @@ SCENARIOS = [
         ),
         "effect": {"type": "boost", "amount": 25},
     },
+    {
+        "name": "boiler_anomaly_warning",
+        "condition": lambda d, s: (
+            str(d.equipment.get("type") or "").lower().strip() == "boiler" and
+            d.criticality >= 4 and
+            d.count_active_breaches() == 1
+        ),
+        "effect": {
+            "type": "critical_override",
+            "boost_amount": 15.0,
+            "bucket": "medium"
+        },
+    },
+    {
+        "name": "boiler_critical_stress",
+        "condition": lambda d, s: (
+            str(d.equipment.get("type") or "").lower().strip() == "boiler" and
+            d.criticality >= 4 and
+            d.count_active_breaches() >= 2
+        ),
+        "effect": {
+            "type": "critical_override",
+            "boost_amount": 35.0,
+            "bucket": "high"
+        },
+    },
 ]
 
 def apply_scenarios(base_score: float, data: AssetData) -> Tuple[float, List[str], Optional[str]]:
@@ -354,10 +398,14 @@ def apply_scenarios(base_score: float, data: AssetData) -> Tuple[float, List[str
     for scenario in SCENARIOS:
         if scenario["condition"](data, base_score):
             matched.append(scenario["name"])
-            if scenario["effect"]["type"] == "boost":
-                score += scenario["effect"]["amount"]
-            elif scenario["effect"]["type"] == "override_min_bucket":
-                forced_min_bucket = scenario["effect"]["bucket"]
+            effect = scenario["effect"]
+            if effect["type"] == "boost":
+                score += effect["amount"]
+            elif effect["type"] == "override_min_bucket":
+                forced_min_bucket = effect["bucket"]
+            elif effect["type"] == "critical_override":
+                score += effect.get("boost_amount", 0.0)
+                forced_min_bucket = effect["bucket"]
     return min(score, 100.0), matched, forced_min_bucket
 
 def bucket_for(score: float, forced_min: Optional[str]) -> str:

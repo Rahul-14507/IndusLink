@@ -52,18 +52,38 @@ def get_explanation(
         
         prompt = build_explanation_prompt(asset, sub_scores, matched_scenarios, bucket, action)
         
-        model = os.environ.get("GROQ_MODEL", "groq/compound-mini")
-        
-        completion = client.chat.completions.create(
-            model=model,
-            messages=[
-                {"role": "system", "content": EXPLAIN_SYSTEM_PROMPT.strip()},
-                {"role": "user", "content": prompt.strip()}
-            ],
-            max_tokens=300,
-            temperature=0.2
-        )
-        return completion.choices[0].message.content.strip()
+        model = os.environ.get("GROQ_MODEL")
+        if not model:
+            model = "groq/compound-mini"
+            
+        try:
+            completion = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": EXPLAIN_SYSTEM_PROMPT.strip()},
+                    {"role": "user", "content": prompt.strip()}
+                ],
+                max_tokens=300,
+                temperature=0.2
+            )
+            return completion.choices[0].message.content.strip()
+        except Exception as e:
+            # If the primary model fails (e.g., due to rate limits), try a fast fallback model
+            if "rate_limit" in str(e).lower() or "limit reached" in str(e).lower() or "429" in str(e):
+                fallback_model = "groq/compound-mini"
+                if model != fallback_model:
+                    logger.warning(f"Primary model {model} failed due to rate limits. Falling back to {fallback_model}...")
+                    completion = client.chat.completions.create(
+                        model=fallback_model,
+                        messages=[
+                            {"role": "system", "content": EXPLAIN_SYSTEM_PROMPT.strip()},
+                            {"role": "user", "content": prompt.strip()}
+                        ],
+                        max_tokens=300,
+                        temperature=0.2
+                    )
+                    return completion.choices[0].message.content.strip()
+            raise e
     except Exception as e:
         logger.error(f"Error calling Groq API: {e}", exc_info=True)
         return None
