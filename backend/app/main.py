@@ -427,7 +427,10 @@ def trigger_batch_scoring():
         success_count = 0
         failed_assets = []
         
-        for aid in asset_ids:
+        import time
+        for idx, aid in enumerate(asset_ids):
+            if idx > 0:
+                time.sleep(1.5)
             res = run_scoring_pipeline(aid)
             if res:
                 success_count += 1

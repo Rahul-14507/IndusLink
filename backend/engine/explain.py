@@ -52,8 +52,10 @@ def get_explanation(
         
         prompt = build_explanation_prompt(asset, sub_scores, matched_scenarios, bucket, action)
         
+        model = os.environ.get("GROQ_MODEL", "groq/compound-mini")
+        
         completion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",  # Using Llama-3.3-70b
+            model=model,
             messages=[
                 {"role": "system", "content": EXPLAIN_SYSTEM_PROMPT.strip()},
                 {"role": "user", "content": prompt.strip()}

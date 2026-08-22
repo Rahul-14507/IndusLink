@@ -179,18 +179,24 @@ function RiskRadarApp({ onLeaveApp }) {
   return (
     <div className="min-h-screen flex flex-col bg-background font-sans text-ink">
       {/* Top Banner Navigation */}
-      <header className="sticky top-0 z-30 bg-surface border-b border-border shadow-sm px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <ShieldAlert className="h-6 w-6 text-primary" />
-          <h1 className="text-lg font-black tracking-tight uppercase">RiskRadar</h1>
+      <header className="sticky top-0 z-30 bg-surface border-b border-border shadow-sm px-4 md:px-6 py-3 md:py-4 flex flex-col md:flex-row md:items-center md:justify-between space-y-3 md:space-y-0">
+        <div className="flex items-center justify-between w-full md:w-auto">
+          <div className="flex items-center space-x-3">
+            <ShieldAlert className="h-6 w-6 text-primary" />
+            <h1 className="text-lg font-black tracking-tight uppercase">RiskRadar</h1>
+          </div>
+          {/* Mobile-only Live Indicator location next to logo */}
+          <div className="flex items-center md:hidden">
+            <LiveFeedIndicator active={isPulseActive} />
+          </div>
         </div>
 
         {/* Tab Selection */}
         {!selectedAssetId && (
-          <nav className="flex space-x-1">
+          <nav className="flex space-x-1 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
             <button
               onClick={() => setActiveTab("queue")}
-              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider border rounded transition-colors ${
+              className={`flex-1 md:flex-none text-center px-3 md:px-4 py-2 text-[10px] md:text-xs font-bold uppercase tracking-wider border rounded transition-colors whitespace-nowrap ${
                 activeTab === "queue"
                   ? "bg-primary text-white border-primary"
                   : "bg-surface text-ink-muted border-border hover:bg-surface-muted"
@@ -200,7 +206,7 @@ function RiskRadarApp({ onLeaveApp }) {
             </button>
             <button
               onClick={() => setActiveTab("trends")}
-              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider border rounded transition-colors ${
+              className={`flex-1 md:flex-none text-center px-3 md:px-4 py-2 text-[10px] md:text-xs font-bold uppercase tracking-wider border rounded transition-colors whitespace-nowrap ${
                 activeTab === "trends"
                   ? "bg-primary text-white border-primary"
                   : "bg-surface text-ink-muted border-border hover:bg-surface-muted"
@@ -210,7 +216,7 @@ function RiskRadarApp({ onLeaveApp }) {
             </button>
             <button
               onClick={() => setActiveTab("audit")}
-              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider border rounded transition-colors ${
+              className={`flex-1 md:flex-none text-center px-3 md:px-4 py-2 text-[10px] md:text-xs font-bold uppercase tracking-wider border rounded transition-colors whitespace-nowrap ${
                 activeTab === "audit"
                   ? "bg-primary text-white border-primary"
                   : "bg-surface text-ink-muted border-border hover:bg-surface-muted"
@@ -222,13 +228,15 @@ function RiskRadarApp({ onLeaveApp }) {
         )}
 
         {/* Live Indicator & Admin Controls */}
-        <div className="flex items-center space-x-4">
-          <LiveFeedIndicator active={isPulseActive} />
+        <div className="flex items-center justify-between md:justify-end space-x-4 w-full md:w-auto">
+          <div className="hidden md:flex">
+            <LiveFeedIndicator active={isPulseActive} />
+          </div>
           
           <button
             onClick={() => runScoringBatch.mutate()}
             disabled={runScoringBatch.isPending}
-            className="flex items-center space-x-1 px-3 py-1.5 bg-accent hover:bg-accent/90 disabled:bg-accent/50 text-white text-xs font-bold uppercase tracking-wider rounded transition-colors shadow-sm"
+            className="flex-grow md:flex-grow-0 flex items-center justify-center space-x-1.5 px-3 py-2 md:py-1.5 bg-accent hover:bg-accent/90 disabled:bg-accent/50 text-white text-[10px] md:text-xs font-bold uppercase tracking-wider rounded transition-colors shadow-sm"
           >
             <Play className="h-3.5 w-3.5 fill-white" />
             <span>{runScoringBatch.isPending ? "Running..." : "Evaluate Safety"}</span>
@@ -237,7 +245,7 @@ function RiskRadarApp({ onLeaveApp }) {
       </header>
 
       {/* Main Panel Content */}
-      <main className="flex-grow p-6 max-w-7xl w-full mx-auto">
+      <main className="flex-grow p-4 md:p-6 max-w-7xl w-full mx-auto">
         {selectedAssetId ? (
           /* Detailed Assessment Card View */
           <AssetDetailPage

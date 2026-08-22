@@ -16,7 +16,21 @@ export default function DashboardTrends({ trends }) {
 
   const { risk_by_type, risk_by_location, action_backlog } = trends;
 
-  const SCADA_COLORS = ["#0E7C7B", "#0E7C7B/80", "#0E7C7B/50"];
+  const [isMobile, setIsMobile] = React.useState(false);
+  React.useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  const formatActionTick = (val) => {
+    const formatted = val.replace(/_/g, ' ');
+    if (isMobile && formatted.length > 12) {
+      return formatted.substring(0, 10) + "..";
+    }
+    return formatted;
+  };
 
   return (
     <div className="space-y-8">
@@ -29,7 +43,7 @@ export default function DashboardTrends({ trends }) {
           </h3>
           <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={risk_by_type} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <BarChart data={risk_by_type} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#E4E6E3" />
                 <XAxis dataKey="type" stroke="#5B6660" fontSize={10} tickLine={false} />
                 <YAxis stroke="#5B6660" fontSize={10} tickLine={false} allowDecimals={false} />
@@ -58,7 +72,7 @@ export default function DashboardTrends({ trends }) {
           </h3>
           <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={risk_by_location} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <BarChart data={risk_by_location} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#E4E6E3" />
                 <XAxis dataKey="location" stroke="#5B6660" fontSize={10} tickLine={false} />
                 <YAxis stroke="#5B6660" fontSize={10} tickLine={false} allowDecimals={false} />
@@ -92,11 +106,19 @@ export default function DashboardTrends({ trends }) {
               <BarChart
                 layout="vertical"
                 data={action_backlog}
-                margin={{ top: 10, right: 10, left: 40, bottom: 0 }}
+                margin={{ top: 10, right: 10, left: isMobile ? -35 : 20, bottom: 0 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#E4E6E3" horizontal={false} />
                 <XAxis type="number" stroke="#5B6660" fontSize={10} tickLine={false} allowDecimals={false} />
-                <YAxis dataKey="action" type="category" stroke="#5B6660" fontSize={9} tickLine={false} width={150} />
+                <YAxis
+                  dataKey="action"
+                  type="category"
+                  stroke="#5B6660"
+                  fontSize={isMobile ? 8 : 9}
+                  tickLine={false}
+                  width={isMobile ? 70 : 150}
+                  tickFormatter={formatActionTick}
+                />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "#FFFFFF",

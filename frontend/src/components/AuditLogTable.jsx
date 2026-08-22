@@ -25,8 +25,8 @@ export default function AuditLogTable({ auditLogs, onFilterAsset, activeAssetFil
   return (
     <div className="space-y-4">
       {/* Log Search Filter Bar */}
-      <form onSubmit={handleSearchSubmit} className="flex space-x-2 bg-surface p-4 border border-border rounded shadow-sm">
-        <div className="relative flex-grow max-w-md">
+      <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 bg-surface p-4 border border-border rounded shadow-sm">
+        <div className="relative flex-grow max-w-md w-full">
           <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <Search className="h-4 w-4 text-ink-muted" />
           </span>
@@ -40,7 +40,7 @@ export default function AuditLogTable({ auditLogs, onFilterAsset, activeAssetFil
         </div>
         <button
           type="submit"
-          className="px-4 py-2 bg-primary hover:bg-primary/95 text-white text-sm font-semibold rounded transition-colors uppercase tracking-wider"
+          className="w-full sm:w-auto px-4 py-2 bg-primary hover:bg-primary/95 text-white text-sm font-semibold rounded transition-colors uppercase tracking-wider"
         >
           Apply Filter
         </button>
@@ -51,7 +51,7 @@ export default function AuditLogTable({ auditLogs, onFilterAsset, activeAssetFil
               setSearchAsset("");
               onFilterAsset("");
             }}
-            className="px-3 py-2 bg-surface hover:bg-surface-muted text-ink-muted text-sm border border-border rounded font-medium"
+            className="w-full sm:w-auto px-3 py-2 bg-surface hover:bg-surface-muted text-ink-muted text-sm border border-border rounded font-medium"
           >
             Clear
           </button>
@@ -67,9 +67,9 @@ export default function AuditLogTable({ auditLogs, onFilterAsset, activeAssetFil
               <th className="px-4 py-3">Timestamp (UTC)</th>
               <th className="px-4 py-3">Asset ID</th>
               <th className="px-4 py-3">Score</th>
-              <th className="px-4 py-3">Bucket</th>
-              <th className="px-4 py-3">Matched Scenarios</th>
-              <th className="px-4 py-3">Deterministic Action</th>
+              <th className="hidden sm:table-cell px-4 py-3">Bucket</th>
+              <th className="hidden md:table-cell px-4 py-3">Matched Scenarios</th>
+              <th className="hidden md:table-cell px-4 py-3">Deterministic Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border text-sm font-mono text-ink">
@@ -94,7 +94,7 @@ export default function AuditLogTable({ auditLogs, onFilterAsset, activeAssetFil
                       </td>
                       <td className="px-4 py-3 font-semibold text-primary">{log.asset_id}</td>
                       <td className="px-4 py-3 font-bold">{parseFloat(log.final_score).toFixed(1)}</td>
-                      <td className="px-4 py-3">
+                      <td className="hidden sm:table-cell px-4 py-3">
                         <span className={`px-1.5 py-0.5 rounded text-[10px] uppercase font-bold border ${
                           log.bucket === "high" ? "bg-red-50 text-risk-high border-risk-high/20" :
                           log.bucket === "medium" ? "bg-amber-50 text-risk-medium border-risk-medium/30" :
@@ -103,12 +103,12 @@ export default function AuditLogTable({ auditLogs, onFilterAsset, activeAssetFil
                           {log.bucket}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-xs text-ink-muted">
+                      <td className="hidden md:table-cell px-4 py-3 text-xs text-ink-muted">
                         {log.matched_scenarios && log.matched_scenarios.length > 0
                           ? log.matched_scenarios.join(", ")
                           : "none"}
                       </td>
-                      <td className="px-4 py-3 text-xs text-ink-muted uppercase font-bold tracking-wider">
+                      <td className="hidden md:table-cell px-4 py-3 text-xs text-ink-muted uppercase font-bold tracking-wider">
                         {log.recommended_action.replace(/_/g, " ")}
                       </td>
                     </tr>

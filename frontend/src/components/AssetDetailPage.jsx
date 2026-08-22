@@ -243,7 +243,7 @@ export default function AssetDetailPage({ assetId, assetDetail, history, onBack 
                     />
                   </LineChart>
                 </ResponsiveContainer>
-                <div className="flex items-center justify-center space-x-6 text-[10px] uppercase font-bold text-ink-muted mt-3">
+                <div className="flex flex-wrap items-center justify-center gap-3 text-[10px] uppercase font-bold text-ink-muted mt-3">
                   <div className="flex items-center"><span className="h-2 w-2 bg-risk-low/20 mr-1 border border-risk-low/30"></span> Low Risk (0-40)</div>
                   <div className="flex items-center"><span className="h-2 w-2 bg-risk-medium/20 mr-1 border border-risk-medium/30"></span> Med Risk (40-70)</div>
                   <div className="flex items-center"><span className="h-2 w-2 bg-risk-high/20 mr-1 border border-risk-high/30"></span> High Risk (70-100)</div>

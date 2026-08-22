@@ -172,7 +172,7 @@ export default function RiskQueueTable({ queue, onSelectAsset }) {
                 </th>
                 <th 
                   onClick={() => handleSort("asset_type")}
-                  className="px-4 py-3 cursor-pointer hover:text-ink hover:bg-border/30 transition-colors"
+                  className="hidden sm:table-cell px-4 py-3 cursor-pointer hover:text-ink hover:bg-border/30 transition-colors"
                 >
                   <div className="flex items-center space-x-1">
                     <span>Type</span>
@@ -181,7 +181,7 @@ export default function RiskQueueTable({ queue, onSelectAsset }) {
                 </th>
                 <th 
                   onClick={() => handleSort("asset_location")}
-                  className="px-4 py-3 cursor-pointer hover:text-ink hover:bg-border/30 transition-colors"
+                  className="hidden md:table-cell px-4 py-3 cursor-pointer hover:text-ink hover:bg-border/30 transition-colors"
                 >
                   <div className="flex items-center space-x-1">
                     <span>Location</span>
@@ -190,7 +190,7 @@ export default function RiskQueueTable({ queue, onSelectAsset }) {
                 </th>
                 <th 
                   onClick={() => handleSort("asset_criticality")}
-                  className="px-4 py-3 cursor-pointer hover:text-ink hover:bg-border/30 transition-colors text-center"
+                  className="hidden sm:table-cell px-4 py-3 cursor-pointer hover:text-ink hover:bg-border/30 transition-colors text-center"
                 >
                   <div className="flex items-center justify-center space-x-1">
                     <span>Crit.</span>
@@ -215,8 +215,8 @@ export default function RiskQueueTable({ queue, onSelectAsset }) {
                     <ArrowUpDown className="h-3 w-3" />
                   </div>
                 </th>
-                <th className="px-4 py-3">Flags / Scenarios</th>
-                <th className="px-4 py-3">Recommended Action</th>
+                <th className="hidden md:table-cell px-4 py-3">Flags / Scenarios</th>
+                <th className="hidden md:table-cell px-4 py-3">Recommended Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border text-sm text-ink">
@@ -231,9 +231,9 @@ export default function RiskQueueTable({ queue, onSelectAsset }) {
                       <div className="font-semibold text-ink">{row.asset_name}</div>
                       <div className="text-xs text-ink-muted">{row.asset_id}</div>
                     </td>
-                    <td className="px-4 py-3 capitalize">{row.asset_type}</td>
-                    <td className="px-4 py-3">{row.asset_location}</td>
-                    <td className="px-4 py-3 text-center font-medium">
+                    <td className="hidden sm:table-cell px-4 py-3 capitalize">{row.asset_type}</td>
+                    <td className="hidden md:table-cell px-4 py-3">{row.asset_location}</td>
+                    <td className="hidden sm:table-cell px-4 py-3 text-center font-medium">
                       <span className="inline-block px-1.5 py-0.5 bg-background border border-border rounded text-xs">
                         {row.asset_criticality}/5
                       </span>
@@ -242,7 +242,7 @@ export default function RiskQueueTable({ queue, onSelectAsset }) {
                       {parseFloat(row.final_score).toFixed(1)}
                     </td>
                     <td className="px-4 py-3 text-center">{getBucketBadge(row.bucket)}</td>
-                    <td className="px-4 py-3">
+                    <td className="hidden md:table-cell px-4 py-3">
                       <div className="flex flex-wrap gap-1">
                         {row.is_early_warning && (
                           <span className="inline-flex items-center px-2 py-0.5 rounded border border-red-200 bg-red-50 text-risk-high text-xs font-semibold animate-pulse">
@@ -256,7 +256,7 @@ export default function RiskQueueTable({ queue, onSelectAsset }) {
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-3 font-medium text-xs uppercase tracking-wider text-ink-muted">
+                    <td className="hidden md:table-cell px-4 py-3 font-medium text-xs uppercase tracking-wider text-ink-muted">
                       <span className="px-2 py-1 bg-surface-muted border border-border rounded">
                         {row.recommended_action.replace(/_/g, ' ')}
                       </span>
