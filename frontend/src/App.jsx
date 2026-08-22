@@ -19,8 +19,26 @@ import LandingPage from "./components/LandingPage";
 import ImportModal from "./components/ImportModal";
 import PairingModal from "./components/PairingModal";
 
+// Local/ngrok tunnel warning bypass interceptor
+const originalFetch = window.fetch;
+window.fetch = async (input, init) => {
+  init = init || {};
+  init.headers = init.headers || {};
+  if (init.headers instanceof Headers) {
+    init.headers.set("Bypass-Tunnel-Reminder", "true");
+    init.headers.set("ngrok-skip-browser-warning", "true");
+  } else if (Array.isArray(init.headers)) {
+    init.headers.push(["Bypass-Tunnel-Reminder", "true"]);
+    init.headers.push(["ngrok-skip-browser-warning", "true"]);
+  } else {
+    init.headers["Bypass-Tunnel-Reminder"] = "true";
+    init.headers["ngrok-skip-browser-warning"] = "true";
+  }
+  return originalFetch(input, init);
+};
+
 // API Base URL
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -88,8 +106,9 @@ function RiskRadarApp({ onLeaveApp, currentRoute }) {
 
   // --- WebSocket Real-Time Invalidation ---
   useEffect(() => {
-    // Determine websocket server IP
-    const wsUrl = `ws://127.0.0.1:8000/ws/live-risk`;
+    // Determine websocket server IP dynamically from API base
+    const rawWsBase = API_BASE.replace(/^http:/, "ws:").replace(/^https:/, "wss:");
+    const wsUrl = `${rawWsBase}/ws/live-risk`;
     console.log("Connecting to WebSocket:", wsUrl);
     const ws = new WebSocket(wsUrl);
 

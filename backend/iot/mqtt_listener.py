@@ -175,17 +175,17 @@ def start_listener():
     conn = get_db_connection()
     try:
         with conn.cursor() as cur:
-            cur.execute("SELECT asset_id FROM equipment WHERE UPPER(asset_id) = 'AGRLINK-DEMO-001'")
-            if not cur.fetchone():
-                logger.info("Auto-provisioning demo asset AGRLINK-DEMO-001...")
-                cur.execute(
-                    """
-                    INSERT INTO equipment (asset_id, name, type, location, install_date, criticality)
-                    VALUES ('AGRLINK-DEMO-001', 'Wokwi ESP32 Sensor Hub', 'sensor_hub', 'IoT Demo Lab', CURRENT_DATE, 4)
-                    """
-                )
-                conn.commit()
-                logger.info("Demo asset AGRLINK-DEMO-001 provisioned successfully.")
+            logger.info("Auto-provisioning demo asset AGRLINK-DEMO-001 as boiler...")
+            cur.execute(
+                """
+                INSERT INTO equipment (asset_id, name, type, location, install_date, criticality)
+                VALUES ('AGRLINK-DEMO-001', 'Wokwi ESP32 Steam Boiler', 'boiler', 'IoT Demo Lab', CURRENT_DATE, 4)
+                ON CONFLICT (asset_id) DO UPDATE 
+                SET name = EXCLUDED.name, type = EXCLUDED.type, location = EXCLUDED.location
+                """
+            )
+            conn.commit()
+            logger.info("Demo asset AGRLINK-DEMO-001 provisioned successfully.")
     except Exception as e:
         logger.error(f"Failed to auto-provision demo asset: {e}")
         if conn:
