@@ -18,6 +18,24 @@ import LiveFeedIndicator from "./components/LiveFeedIndicator";
 import LandingPage from "./components/LandingPage";
 import ImportModal from "./components/ImportModal";
 
+// Local/ngrok tunnel warning bypass interceptor
+const originalFetch = window.fetch;
+window.fetch = async (input, init) => {
+  init = init || {};
+  init.headers = init.headers || {};
+  if (init.headers instanceof Headers) {
+    init.headers.set("Bypass-Tunnel-Reminder", "true");
+    init.headers.set("ngrok-skip-browser-warning", "true");
+  } else if (Array.isArray(init.headers)) {
+    init.headers.push(["Bypass-Tunnel-Reminder", "true"]);
+    init.headers.push(["ngrok-skip-browser-warning", "true"]);
+  } else {
+    init.headers["Bypass-Tunnel-Reminder"] = "true";
+    init.headers["ngrok-skip-browser-warning"] = "true";
+  }
+  return originalFetch(input, init);
+};
+
 // API Base URL
 const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000";
 
