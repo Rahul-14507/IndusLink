@@ -19,7 +19,7 @@ import LandingPage from "./components/LandingPage";
 import ImportModal from "./components/ImportModal";
 
 // API Base URL
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -42,8 +42,9 @@ function RiskRadarApp({ onLeaveApp }) {
 
   // --- WebSocket Real-Time Invalidation ---
   useEffect(() => {
-    // Determine websocket server IP
-    const wsUrl = `ws://127.0.0.1:8000/ws/live-risk`;
+    // Determine websocket server IP dynamically from API base
+    const rawWsBase = API_BASE.replace(/^http:/, "ws:").replace(/^https:/, "wss:");
+    const wsUrl = `${rawWsBase}/ws/live-risk`;
     console.log("Connecting to WebSocket:", wsUrl);
     const ws = new WebSocket(wsUrl);
 
