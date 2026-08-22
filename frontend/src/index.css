@@ -7,3 +7,19 @@ body {
   background-color: #FAFAF9;
   color: #1F2A24;
 }
+
+.bg-grid-warm {
+  background-image: 
+    linear-gradient(to right, #EFECE6 1px, transparent 1px),
+    linear-gradient(to bottom, #EFECE6 1px, transparent 1px);
+  background-size: 4rem 4rem;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
