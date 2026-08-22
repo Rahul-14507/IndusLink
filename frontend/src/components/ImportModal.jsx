@@ -96,18 +96,18 @@ export default function ImportModal({ isOpen, onClose, onIngestSuccess, apiBase 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 backdrop-blur-sm p-4">
       <div 
-        className="bg-surface border border-border rounded shadow-xl max-w-xl w-full flex flex-col max-h-[90vh]"
+        className="bg-surface border border-border rounded-2xl shadow-2xl max-w-xl w-full flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <div className="flex items-center space-x-2">
-            <FileText className="h-5 w-5 text-primary" />
+            <FileText className="h-5 w-5 text-[#1D3225]" />
             <h2 className="text-sm font-bold text-ink uppercase tracking-wider">Import CSV Telemetry Data</h2>
           </div>
           <button 
             onClick={onClose} 
-            className="text-ink-muted hover:text-ink p-1 hover:bg-border/20 rounded transition-colors"
+            className="text-ink-muted hover:text-ink p-1 hover:bg-border/20 rounded-lg transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
@@ -119,13 +119,13 @@ export default function ImportModal({ isOpen, onClose, onIngestSuccess, apiBase 
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* DataType Selector */}
               <div>
-                <label className="block text-xs font-semibold text-ink-muted uppercase tracking-wider mb-2">
+                <label className="block text-[10px] font-bold text-ink-muted uppercase tracking-wider mb-2 font-mono">
                   Select Data Type / Destination Table
                 </label>
                 <select
                   value={dataType}
                   onChange={(e) => setDataType(e.target.value)}
-                  className="w-full text-sm px-3.5 py-2.5 bg-background border border-border rounded focus:outline-none focus:border-primary text-ink"
+                  className="w-full text-sm px-3.5 py-2.5 bg-background border border-border rounded-lg focus:outline-none focus:border-[#1D3225] focus:ring-1 focus:ring-[#1D3225] text-ink font-sans transition-all"
                 >
                   <option value="equipment">Equipment Catalog (Add/Modify Assets)</option>
                   <option value="maintenance">Maintenance Logs</option>
@@ -137,7 +137,7 @@ export default function ImportModal({ isOpen, onClose, onIngestSuccess, apiBase 
 
               {/* Drag and Drop Zone */}
               <div>
-                <label className="block text-xs font-semibold text-ink-muted uppercase tracking-wider mb-2">
+                <label className="block text-[10px] font-bold text-ink-muted uppercase tracking-wider mb-2 font-mono">
                   Upload CSV File
                 </label>
                 <div
@@ -147,7 +147,7 @@ export default function ImportModal({ isOpen, onClose, onIngestSuccess, apiBase 
                   onDrop={handleDrop}
                   className={`border-2 border-dashed rounded-lg p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-colors ${
                     dragActive 
-                      ? "border-primary bg-primary/5" 
+                      ? "border-[#1D3225] bg-[#1D3225]/5" 
                       : file 
                         ? "border-emerald-500 bg-emerald-50/10" 
                         : "border-border hover:bg-surface-muted/50"
@@ -182,14 +182,14 @@ export default function ImportModal({ isOpen, onClose, onIngestSuccess, apiBase 
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 py-2.5 bg-surface hover:bg-surface-muted text-ink-muted text-xs font-bold uppercase tracking-wider border border-border rounded transition-colors"
+                  className="flex-1 py-2.5 bg-surface hover:bg-surface-muted text-ink-muted text-xs font-bold font-mono uppercase tracking-wider border border-border rounded-full transition-all shadow-sm"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={!file}
-                  className="flex-grow py-2.5 bg-primary hover:bg-primary/95 disabled:bg-primary/40 text-white text-xs font-bold uppercase tracking-wider rounded transition-colors shadow-sm"
+                  className="flex-grow py-2.5 bg-primary hover:bg-[#15291D] disabled:bg-[#1D3225]/40 text-[#FAF8F5] text-xs font-bold font-mono uppercase tracking-wider rounded-full transition-all shadow-sm"
                 >
                   Upload & Import
                 </button>
@@ -209,7 +209,7 @@ export default function ImportModal({ isOpen, onClose, onIngestSuccess, apiBase 
 
           {status === "success" && (
             <div className="space-y-5">
-              <div className="flex items-center space-x-3 p-4 bg-emerald-50 border border-emerald-200 rounded">
+              <div className="flex items-center space-x-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
                 <CheckCircle2 className="h-8 w-8 text-emerald-500 shrink-0" />
                 <div>
                   <h3 className="text-sm font-bold text-ink uppercase tracking-wider">Import Successful</h3>
@@ -218,7 +218,7 @@ export default function ImportModal({ isOpen, onClose, onIngestSuccess, apiBase 
               </div>
 
               {/* Ingestion results details */}
-              <div className="border border-border rounded bg-surface p-4 text-xs space-y-3">
+              <div className="border border-border rounded-xl bg-surface p-4 text-xs space-y-3">
                 <div className="flex justify-between border-b border-border/80 pb-2">
                   <span className="text-ink-muted uppercase font-semibold">Destination dataType</span>
                   <span className="font-bold text-ink capitalize">{dataType}</span>
@@ -239,7 +239,7 @@ export default function ImportModal({ isOpen, onClose, onIngestSuccess, apiBase 
 
               <button
                 onClick={onClose}
-                className="w-full py-2.5 bg-primary hover:bg-primary/95 text-white text-xs font-bold uppercase tracking-wider rounded transition-colors shadow-sm"
+                className="w-full py-2.5 bg-[#1D3225] hover:bg-[#15291D] text-white text-xs font-bold font-mono uppercase tracking-wider rounded-full transition-all shadow-sm"
               >
                 Close & View Results
               </button>
@@ -248,7 +248,7 @@ export default function ImportModal({ isOpen, onClose, onIngestSuccess, apiBase 
 
           {status === "error" && (
             <div className="space-y-4">
-              <div className="flex items-center space-x-3 p-4 bg-red-50 border border-red-200 rounded">
+              <div className="flex items-center space-x-3 p-4 bg-red-50 border border-red-200 rounded-xl">
                 <AlertOctagon className="h-8 w-8 text-risk-high shrink-0" />
                 <div>
                   <h3 className="text-sm font-bold text-ink uppercase tracking-wider">Ingestion Rejected</h3>
@@ -259,7 +259,7 @@ export default function ImportModal({ isOpen, onClose, onIngestSuccess, apiBase 
               {/* Error list display */}
               <div className="space-y-2">
                 <div className="text-xs font-bold text-ink-muted uppercase tracking-wider">Validation Errors ({result?.errors?.length || 1})</div>
-                <div className="bg-surface-muted border border-border rounded p-3 max-h-56 overflow-y-auto font-mono text-[11px] text-risk-high leading-relaxed space-y-1.5 shadow-inner">
+                <div className="bg-[#F6F4EE]/60 border border-border rounded-lg p-3 max-h-56 overflow-y-auto font-mono text-[11px] text-risk-high leading-relaxed space-y-1.5 shadow-inner">
                   {result?.errors && result.errors.length > 0 ? (
                     result.errors.map((err, i) => <div key={i} className="border-b border-border/30 pb-1 last:border-0 last:pb-0">🚨 {err}</div>)
                   ) : (
@@ -271,13 +271,13 @@ export default function ImportModal({ isOpen, onClose, onIngestSuccess, apiBase 
               <div className="flex space-x-3 pt-2">
                 <button
                   onClick={resetForm}
-                  className="flex-1 py-2.5 bg-surface hover:bg-surface-muted text-ink-muted text-xs font-bold uppercase tracking-wider border border-border rounded transition-colors"
+                  className="flex-1 py-2.5 bg-surface hover:bg-surface-muted text-ink-muted text-xs font-bold font-mono uppercase tracking-wider border border-border rounded-full transition-all shadow-sm"
                 >
                   Try Again
                 </button>
                 <button
                   onClick={onClose}
-                  className="flex-1 py-2.5 bg-primary hover:bg-primary/95 text-white text-xs font-bold uppercase tracking-wider rounded transition-colors shadow-sm"
+                  className="flex-grow py-2.5 bg-[#1D3225] hover:bg-[#15291D] text-white text-xs font-bold font-mono uppercase tracking-wider rounded-full transition-all shadow-sm"
                 >
                   Dismiss
                 </button>
