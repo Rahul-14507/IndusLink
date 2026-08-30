@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🛡️ RiskRadar
+# IndusLink
 
 ### Industrial Predictive Safety Platform
 
@@ -20,7 +20,7 @@
 
 ## Overview
 
-RiskRadar is a production-grade industrial safety platform that helps plant operators identify which equipment needs attention — *before* incidents occur.
+IndusLink is a production-grade industrial safety platform that helps plant operators identify which equipment needs attention — *before* incidents occur.
 
 It ingests maintenance logs, inspection reports, incident history, and sensor telemetry (both historical batch data and live IoT streams), then deterministically scores every asset's safety risk on a 0–100 index. A Groq-powered LLM layer generates plain-English explanations for each flag, written in the voice of an experienced plant safety engineer — but the *scoring itself is never delegated to any AI model*.
 
@@ -43,7 +43,7 @@ It ingests maintenance logs, inspection reports, incident history, and sensor te
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                          RiskRadar Platform                             │
+│                          IndusLink Platform                             │
 │                                                                         │
 │  ┌────────────────┐     ┌─────────────────────────────────────────┐    │
 │  │  React + Vite  │────▶│              FastAPI Backend             │    │
@@ -59,7 +59,7 @@ It ingests maintenance logs, inspection reports, incident history, and sensor te
 │                         │                      │  │                │   │
 │                         │  scoring.py          │  │  broker.hivemq │   │
 │                         │  ranking.py          │◀─│  .com          │   │
-│                         │  early_warning.py    │  │  riskradar/+/+ │   │
+│                         │  early_warning.py    │  │  IndusLink/+/+ │   │
 │                         │  explain.py (Groq)   │  └────────────────┘   │
 │                         └──────────────┬───────┘                       │
 │                                        │                               │
@@ -198,7 +198,7 @@ cd IndusLink
 docker compose up -d
 ```
 
-> This starts a PostgreSQL 15 container on `localhost:5432`. The database is named `riskradar`, with user/password `postgres`.
+> This starts a PostgreSQL 15 container on `localhost:5432`. The database is named `IndusLink`, with user/password `postgres`.
 
 ### 3. Install backend dependencies
 
@@ -219,7 +219,7 @@ export DB_HOST=localhost
 export DB_PORT=5432
 export DB_USER=postgres
 export DB_PASSWORD=postgres
-export DB_NAME=riskradar
+export DB_NAME=IndusLink
 ```
 
 > **Note:** If `GROQ_API_KEY` is not set, the platform still runs fully — every risk score is computed deterministically. Only the plain-English `explanation_text` field will be `null`. The `explanation_structured` JSON (sub-scores + matched scenarios) is always stored.
@@ -244,7 +244,7 @@ The API is now live at `http://127.0.0.1:8000`. Interactive docs at `http://127.
 
 On startup the backend will:
 - Auto-apply the SQL schema if tables don't exist yet
-- Connect to `broker.hivemq.com` and subscribe to `riskradar/+/+` in a background thread
+- Connect to `broker.hivemq.com` and subscribe to `IndusLink/+/+` in a background thread
 
 ### 7. Run the initial safety assessment
 
@@ -275,7 +275,7 @@ PYTHONPATH=. python backend/scripts/simulate_mqtt.py BOILER-04 temperature 106.0
 ```
 
 The backend listener will:
-1. Receive the message on `riskradar/<asset_id>/<metric>`
+1. Receive the message on `IndusLink/<asset_id>/<metric>`
 2. Write the reading to `sensor_readings` with `source = 'live'`
 3. Run the full scoring pipeline for that asset
 4. Broadcast the updated risk score to any open browser sessions over WebSocket
@@ -368,7 +368,7 @@ Full interactive docs available at `http://127.0.0.1:8000/docs` when the backend
 
 ## Live Wokwi IoT Demo
 
-RiskRadar includes a real-time IoT integration that receives live sensor readings from Wokwi virtual ESP32 hardware over MQTT.
+IndusLink includes a real-time IoT integration that receives live sensor readings from Wokwi virtual ESP32 hardware over MQTT.
 
 ### MQTT Configuration
 - **Broker:** `broker.hivemq.com`
